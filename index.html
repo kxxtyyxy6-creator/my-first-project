@@ -9,6 +9,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- SheetJS for Excel import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     /* ── 基础重置 ── */
@@ -739,515 +741,130 @@
        求职追踪视图
     ══════════════════════════════ */
     #job-view { flex-direction: column; }
-
-    .job-stats-bar {
-      display: flex;
-      background: var(--paper);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .job-stat-item {
-      padding: 14px 22px;
-      border-right: 1px solid var(--border-light);
-      text-align: center;
-      min-width: 90px;
-    }
-
-    .job-stat-num {
-      font-family: var(--font-serif);
-      font-size: 22px;
-      display: block;
-      color: var(--ink);
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-
-    .job-stat-label {
-      font-size: 11px;
-      color: var(--ink-light);
-      letter-spacing: .08em;
-      display: block;
-    }
-
-    .job-body {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .job-main-area {
-      flex: 1;
-      min-width: 0;
-      overflow-y: auto;
-      padding: 20px 24px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .job-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .job-add-btn {
-      border: 1px solid var(--accent);
-      background: var(--accent);
-      color: #fff;
-      font-size: 12px;
-      font-family: var(--font-sans);
-      padding: 6px 14px;
-      border-radius: 3px;
-      cursor: pointer;
-      letter-spacing: .04em;
-      transition: opacity .15s;
-    }
+    .job-stats-bar { display: flex; background: var(--paper); border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+    .job-stat-item { padding: 14px 20px; border-right: 1px solid var(--border-light); text-align: center; min-width: 88px; }
+    .job-stat-num { font-family: var(--font-serif); font-size: 22px; display: block; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+    .job-stat-label { font-size: 11px; color: var(--ink-light); letter-spacing: .08em; display: block; }
+    .job-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .job-main-area { flex: 1; min-width: 0; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; }
+    .job-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .job-add-btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 12px; font-family: var(--font-sans); padding: 6px 14px; border-radius: 3px; cursor: pointer; letter-spacing: .04em; transition: opacity .15s; }
     .job-add-btn:hover { opacity: .85; }
-
-    .job-filter-select {
-      border: 1px solid var(--border);
-      background: var(--paper);
-      color: var(--ink-light);
-      font-size: 12px;
-      font-family: var(--font-sans);
-      padding: 5px 8px;
-      border-radius: 3px;
-      cursor: pointer;
-      outline: none;
-      transition: border-color .12s;
-    }
+    .job-import-btn { border: 1px solid var(--border); background: var(--paper); color: var(--ink-light); font-size: 12px; font-family: var(--font-sans); padding: 6px 12px; border-radius: 3px; cursor: pointer; letter-spacing: .04em; transition: background .15s, border-color .15s; }
+    .job-import-btn:hover { background: var(--hover-bg); border-color: var(--accent); }
+    .job-filter-select { border: 1px solid var(--border); background: var(--paper); color: var(--ink-light); font-size: 12px; font-family: var(--font-sans); padding: 5px 8px; border-radius: 3px; cursor: pointer; outline: none; transition: border-color .12s; }
     .job-filter-select:focus { border-color: var(--accent); }
 
-    .job-card {
-      background: var(--paper);
-      border: 1px solid var(--border-light);
-      border-left: 3px solid var(--border);
-      border-radius: 3px;
-      margin-bottom: 8px;
-      overflow: hidden;
-      transition: border-color .15s;
-    }
-    .job-card:hover { border-color: var(--border); }
-    .job-card[data-status="面试中"]  { border-left-color: var(--accent); }
-    .job-card[data-status="已Offer"] { border-left-color: #7aab7a; }
-    .job-card[data-status="已拒绝"]  { border-left-color: #c0876a; opacity: .75; }
+    /* ── 公司卡片 ── */
+    .co-card { background: var(--paper); border: 1px solid var(--border-light); border-left: 3px solid var(--border); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
+    .co-card[data-priority="高"] { border-left-color: #c0876a; }
+    .co-card[data-priority="中"] { border-left-color: var(--accent); }
+    .co-card[data-priority="低"] { border-left-color: #b0c4b0; }
+    .co-card-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+    .co-card-header:hover { background: var(--hover-bg); }
+    .co-name { font-family: var(--font-serif); font-size: 15px; color: var(--ink); flex-shrink: 0; }
+    .co-url-link { color: var(--ink-light); text-decoration: none; font-size: 14px; flex-shrink: 0; opacity: .65; transition: opacity .12s, color .12s; }
+    .co-url-link:hover { opacity: 1; color: var(--accent); }
+    .co-priority-tag { font-size: 10px; padding: 1px 7px; border-radius: 9px; border: 1px solid var(--border); color: var(--ink-light); cursor: pointer; flex-shrink: 0; letter-spacing: .04em; transition: background .12s; }
+    .co-priority-tag:hover { background: var(--today-bg); }
+    .co-priority-tag[data-p="高"] { border-color: #c0876a; color: #c0876a; }
+    .co-priority-tag[data-p="中"] { border-color: var(--accent); color: var(--accent); }
+    .co-summary { flex: 1; font-size: 11px; color: var(--ink-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .co-expand-arrow { font-size: 11px; color: var(--ink-light); flex-shrink: 0; transition: transform .2s; }
+    .co-card.expanded .co-expand-arrow { transform: rotate(90deg); }
+    .co-card-body { display: none; border-top: 1px solid var(--border-light); padding: 14px; }
+    .co-card.expanded > .co-card-body { display: block; }
+    .co-notes-label { font-size: 11px; color: var(--ink-light); letter-spacing: .06em; margin-bottom: 4px; display: block; }
+    .co-notes-ta { width: 100%; border: 1px solid var(--border-light); background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 12px; line-height: 1.7; padding: 6px 8px; resize: vertical; min-height: 44px; outline: none; border-radius: 3px; transition: border-color .15s; margin-bottom: 12px; }
+    .co-notes-ta:focus { border-color: var(--accent); }
+    .co-action-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); align-items: center; }
 
-    .job-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 14px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .job-card-header:hover { background: var(--hover-bg); }
+    /* ── 岗位子卡片 ── */
+    .pos-list { display: flex; flex-direction: column; gap: 6px; }
+    .pos-card { border: 1px solid var(--border-light); border-radius: 3px; overflow: hidden; background: var(--bg); }
+    .pos-card-header { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; user-select: none; flex-wrap: wrap; }
+    .pos-card-header:hover { background: var(--hover-bg); }
+    .pos-title { font-size: 13px; color: var(--ink); font-weight: 500; flex-shrink: 0; }
+    .pos-city { font-size: 11px; color: var(--ink-light); flex-shrink: 0; }
+    .pos-sbadge { font-size: 10px; padding: 1px 6px; border-radius: 9px; border: 1px solid var(--border); color: var(--ink-light); flex-shrink: 0; letter-spacing: .04em; }
+    .pos-sbadge.s-interviewing { border-color: var(--accent); color: var(--accent); }
+    .pos-sbadge.s-offer        { border-color: #7aab7a; color: #7aab7a; }
+    .pos-sbadge.s-rejected     { border-color: #c0876a; color: #c0876a; opacity: .75; }
+    .pos-deadline-tag { font-size: 11px; color: var(--ink-light); flex-shrink: 0; }
+    .pos-deadline-tag.urgent  { color: #c0876a; font-weight: 500; }
+    .pos-deadline-tag.expired { color: #b96060; }
+    .pos-date { font-size: 11px; color: var(--ink-light); margin-left: auto; flex-shrink: 0; }
+    .pos-card-detail { display: none; border-top: 1px solid var(--border-light); padding: 12px 12px 14px; background: var(--paper); }
+    .pos-card.expanded > .pos-card-detail { display: block; }
+    .pos-card-btns { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-light); }
 
-    .job-co-name {
-      font-family: var(--font-serif);
-      font-size: 14px;
-      color: var(--ink);
-      flex-shrink: 0;
-    }
-
-    .job-pos-name {
-      font-size: 12px;
-      color: var(--ink-light);
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .job-sbadge {
-      font-size: 11px;
-      padding: 1px 7px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      color: var(--ink-light);
-      flex-shrink: 0;
-      letter-spacing: .04em;
-    }
-    .job-sbadge.s-interviewing { border-color: var(--accent); color: var(--accent); }
-    .job-sbadge.s-offer        { border-color: #7aab7a; color: #7aab7a; }
-    .job-sbadge.s-rejected     { border-color: #c0876a; color: #c0876a; }
-
-    .job-deadline-tag { font-size: 11px; color: var(--ink-light); flex-shrink: 0; }
-    .job-deadline-tag.urgent  { color: #c0876a; font-weight: 500; }
-    .job-deadline-tag.expired { color: #b96060; }
-
-    .job-card-meta {
-      padding: 0 14px 10px;
-      font-size: 11px;
-      color: var(--ink-light);
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .job-card-detail {
-      display: none;
-      border-top: 1px solid var(--border-light);
-      padding: 14px 14px 16px;
-    }
-    .job-card.expanded > .job-card-detail { display: block; }
-
-    .job-detail-head {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .job-status-select {
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--ink-light);
-      font-size: 12px;
-      font-family: var(--font-sans);
-      padding: 3px 6px;
-      border-radius: 3px;
-      cursor: pointer;
-      outline: none;
-    }
-
-    .job-sect-title {
-      font-family: var(--font-serif);
-      font-size: 12px;
-      letter-spacing: .1em;
-      color: var(--ink-light);
-      padding-top: 12px;
-      padding-bottom: 7px;
-      border-bottom: 1px solid var(--border-light);
-      margin-bottom: 8px;
-    }
-
-    .job-int-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border-light);
-      flex-wrap: wrap;
-    }
-
-    .job-int-round {
-      font-family: var(--font-serif);
-      font-size: 13px;
-      color: var(--accent);
-      min-width: 32px;
-      flex-shrink: 0;
-    }
-
+    /* ── 共用详情样式 ── */
+    .job-detail-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .job-status-select { border: 1px solid var(--border); background: var(--bg); color: var(--ink-light); font-size: 12px; font-family: var(--font-sans); padding: 3px 6px; border-radius: 3px; cursor: pointer; outline: none; }
+    .job-sect-title { font-family: var(--font-serif); font-size: 12px; letter-spacing: .1em; color: var(--ink-light); padding-top: 12px; padding-bottom: 7px; border-bottom: 1px solid var(--border-light); margin-bottom: 8px; }
+    .job-int-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; }
+    .job-int-round { font-family: var(--font-serif); font-size: 13px; color: var(--accent); min-width: 32px; flex-shrink: 0; }
     .job-int-info { flex: 1; font-size: 12px; color: var(--ink); }
-
     .job-int-actions { display: flex; gap: 8px; align-items: center; }
-
-    .job-debrief-btn {
-      font-size: 11px;
-      color: var(--ink-light);
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      letter-spacing: .04em;
-      text-decoration: underline;
-    }
+    .job-debrief-btn { font-size: 11px; color: var(--ink-light); background: none; border: none; cursor: pointer; padding: 0; letter-spacing: .04em; text-decoration: underline; }
     .job-debrief-btn:hover { color: var(--accent); }
-
-    .job-del-btn {
-      border: none;
-      background: none;
-      color: var(--border);
-      cursor: pointer;
-      font-size: 13px;
-      padding: 0 2px;
-      line-height: 1;
-      transition: color .12s;
-    }
+    .job-del-btn { border: none; background: none; color: var(--border); cursor: pointer; font-size: 13px; padding: 0 2px; line-height: 1; transition: color .12s; }
     .job-del-btn:hover { color: #c0876a; }
-
-    .job-debrief {
-      margin-top: 8px;
-      background: var(--bg);
-      border: 1px solid var(--border-light);
-      border-radius: 3px;
-      padding: 10px 12px;
-      display: none;
-      width: 100%;
-    }
+    .job-debrief { margin-top: 8px; background: var(--bg); border: 1px solid var(--border-light); border-radius: 3px; padding: 10px 12px; display: none; width: 100%; }
     .job-debrief.open { display: block; }
-
     .job-debrief-field { margin-bottom: 8px; }
-
-    .job-debrief-label {
-      font-size: 11px;
-      color: var(--ink-light);
-      letter-spacing: .06em;
-      margin-bottom: 3px;
-      display: block;
-    }
-
-    .job-debrief-ta {
-      width: 100%;
-      border: 1px solid var(--border-light);
-      background: var(--paper);
-      color: var(--ink);
-      font-family: var(--font-sans);
-      font-size: 12px;
-      line-height: 1.7;
-      padding: 6px 8px;
-      resize: vertical;
-      min-height: 48px;
-      outline: none;
-      border-radius: 3px;
-      transition: border-color .15s;
-    }
+    .job-debrief-label { font-size: 11px; color: var(--ink-light); letter-spacing: .06em; margin-bottom: 3px; display: block; }
+    .job-debrief-ta { width: 100%; border: 1px solid var(--border-light); background: var(--paper); color: var(--ink); font-family: var(--font-sans); font-size: 12px; line-height: 1.7; padding: 6px 8px; resize: vertical; min-height: 48px; outline: none; border-radius: 3px; transition: border-color .15s; }
     .job-debrief-ta:focus { border-color: var(--accent); }
-
-    .job-offer-info {
-      background: #fef8f0;
-      border: 1px solid #e8d8c0;
-      border-radius: 3px;
-      padding: 12px 14px;
-      margin-top: 8px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px 16px;
-    }
-
-    .job-offer-f  { display: flex; flex-direction: column; gap: 2px; }
+    .job-offer-info { background: #fef8f0; border: 1px solid #e8d8c0; border-radius: 3px; padding: 12px 14px; margin-top: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 16px; }
+    .job-offer-f { display: flex; flex-direction: column; gap: 2px; }
     .job-offer-fl { font-size: 10px; color: var(--ink-light); letter-spacing: .06em; }
     .job-offer-fv { font-size: 13px; color: var(--ink); }
-
-    .job-notes-ta {
-      width: 100%;
-      border: 1px solid var(--border-light);
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--font-sans);
-      font-size: 12px;
-      line-height: 1.7;
-      padding: 6px 8px;
-      resize: vertical;
-      min-height: 44px;
-      outline: none;
-      border-radius: 3px;
-      margin-top: 4px;
-      transition: border-color .15s;
-    }
+    .job-notes-ta { width: 100%; border: 1px solid var(--border-light); background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 12px; line-height: 1.7; padding: 6px 8px; resize: vertical; min-height: 44px; outline: none; border-radius: 3px; margin-top: 4px; transition: border-color .15s; }
     .job-notes-ta:focus { border-color: var(--accent); }
-
-    .job-add-int-btn {
-      font-size: 12px;
-      color: var(--accent);
-      border: 1px dashed var(--accent);
-      background: transparent;
-      padding: 5px 12px;
-      border-radius: 3px;
-      cursor: pointer;
-      letter-spacing: .04em;
-      margin-top: 8px;
-      font-family: var(--font-sans);
-      transition: background .12s;
-    }
+    .job-add-int-btn { font-size: 12px; color: var(--accent); border: 1px dashed var(--accent); background: transparent; padding: 5px 12px; border-radius: 3px; cursor: pointer; letter-spacing: .04em; margin-top: 8px; font-family: var(--font-sans); transition: background .12s; }
     .job-add-int-btn:hover { background: var(--today-bg); }
-
-    .job-card-btns {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border-light);
-    }
-
-    .job-card-btn {
-      font-size: 11px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--ink-light);
-      padding: 4px 10px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-family: var(--font-sans);
-      transition: background .12s;
-    }
+    .job-card-btn { font-size: 11px; border: 1px solid var(--border); background: transparent; color: var(--ink-light); padding: 4px 10px; border-radius: 3px; cursor: pointer; font-family: var(--font-sans); transition: background .12s; }
     .job-card-btn:hover { background: var(--hover-bg); }
     .job-card-btn.danger:hover { border-color: #c0876a; color: #c0876a; }
 
-    .job-offer-cmp {
-      margin-top: 20px;
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .job-offer-cmp-title {
-      font-family: var(--font-serif);
-      font-size: 13px;
-      letter-spacing: .1em;
-      color: var(--ink-light);
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-    }
-
+    /* ── Offer 对比 & 侧栏 ── */
+    .job-offer-cmp { margin-top: 20px; background: var(--paper); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+    .job-offer-cmp-title { font-family: var(--font-serif); font-size: 13px; letter-spacing: .1em; color: var(--ink-light); padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg); }
     .job-offer-table { width: 100%; border-collapse: collapse; }
-
-    .job-offer-table th,
-    .job-offer-table td {
-      padding: 8px 12px;
-      border: 1px solid var(--border-light);
-      font-size: 12px;
-      text-align: left;
-    }
-
-    .job-offer-table th {
-      background: var(--bg);
-      font-weight: normal;
-      font-family: var(--font-serif);
-      color: var(--ink-light);
-      letter-spacing: .06em;
-      width: 80px;
-    }
-
+    .job-offer-table th, .job-offer-table td { padding: 8px 12px; border: 1px solid var(--border-light); font-size: 12px; text-align: left; }
+    .job-offer-table th { background: var(--bg); font-weight: normal; font-family: var(--font-serif); color: var(--ink-light); letter-spacing: .06em; width: 80px; }
     .job-offer-table td { color: var(--ink); }
-
-    .job-sidebar {
-      width: var(--sidebar-w);
-      flex-shrink: 0;
-      border-left: 1px solid var(--border);
-      background: var(--paper);
-      padding: 20px 16px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .job-deadline-item {
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border-light);
-      font-size: 12px;
-      color: var(--ink-light);
-      line-height: 1.5;
-    }
+    .job-sidebar { width: var(--sidebar-w); flex-shrink: 0; border-left: 1px solid var(--border); background: var(--paper); padding: 20px 16px; overflow-y: auto; display: flex; flex-direction: column; }
+    .job-deadline-item { padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; color: var(--ink-light); line-height: 1.5; }
     .job-deadline-item.urgent  { color: #c0876a; }
     .job-deadline-item.expired { color: #b96060; }
-
     .job-deadline-days { font-size: 11px; letter-spacing: .03em; }
 
-    .job-modal-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 120;
-      background: rgba(250,249,247,.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(2px);
-    }
+    /* ── 模态框 ── */
+    .job-modal-overlay { position: fixed; inset: 0; z-index: 120; background: rgba(250,249,247,.9); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
     .job-modal-overlay.hidden { display: none; }
-
-    .job-modal {
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 26px 26px 22px;
-      width: 500px;
-      max-width: 94vw;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 4px 24px rgba(0,0,0,.08);
-    }
-
-    .job-modal-title {
-      font-family: var(--font-serif);
-      font-size: 18px;
-      letter-spacing: .08em;
-      margin-bottom: 18px;
-    }
-
-    .job-form-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .job-form-field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-    }
-
-    .job-form-label {
-      font-size: 11px;
-      color: var(--ink-light);
-      letter-spacing: .06em;
-    }
-
-    .job-form-input,
-    .job-form-select {
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--font-sans);
-      font-size: 13px;
-      padding: 6px 8px;
-      border-radius: 3px;
-      outline: none;
-      transition: border-color .15s;
-    }
-    .job-form-input:focus,
-    .job-form-select:focus { border-color: var(--accent); }
-
-    .job-offer-sect-head {
-      font-family: var(--font-serif);
-      font-size: 12px;
-      letter-spacing: .1em;
-      color: var(--ink-light);
-      margin: 8px 0 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .job-modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 18px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border-light);
-    }
-
-    .job-modal-cancel {
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--ink-light);
-      font-size: 13px;
-      font-family: var(--font-sans);
-      padding: 6px 14px;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: background .12s;
-    }
+    .job-modal { background: var(--paper); border: 1px solid var(--border); border-radius: 6px; padding: 26px 26px 22px; width: 500px; max-width: 94vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+    .job-modal-title { font-family: var(--font-serif); font-size: 18px; letter-spacing: .08em; margin-bottom: 18px; }
+    .job-form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .job-form-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .job-form-label { font-size: 11px; color: var(--ink-light); letter-spacing: .06em; }
+    .job-form-input, .job-form-select { border: 1px solid var(--border); background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 13px; padding: 6px 8px; border-radius: 3px; outline: none; transition: border-color .15s; }
+    .job-form-input:focus, .job-form-select:focus { border-color: var(--accent); }
+    .job-offer-sect-head { font-family: var(--font-serif); font-size: 12px; letter-spacing: .1em; color: var(--ink-light); margin: 8px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-light); }
+    .job-modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border-light); }
+    .job-modal-cancel { border: 1px solid var(--border); background: transparent; color: var(--ink-light); font-size: 13px; font-family: var(--font-sans); padding: 6px 14px; border-radius: 3px; cursor: pointer; transition: background .12s; }
     .job-modal-cancel:hover { background: var(--hover-bg); }
-
-    .job-modal-save {
-      border: 1px solid var(--accent);
-      background: var(--accent);
-      color: #fff;
-      font-size: 13px;
-      font-family: var(--font-sans);
-      padding: 6px 16px;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
+    .job-modal-save { border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 13px; font-family: var(--font-sans); padding: 6px 16px; border-radius: 3px; cursor: pointer; transition: opacity .15s; }
     .job-modal-save:hover { opacity: .85; }
+    .co-match-hint { font-size: 12px; color: var(--accent); background: #fef8f0; border: 1px solid #e8d8c0; border-radius: 3px; padding: 8px 12px; margin-bottom: 10px; display: none; }
+    .co-match-hint.show { display: block; }
+    .import-preview-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 3px; margin: 10px 0; }
+    .import-preview-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-bottom: 1px solid var(--border-light); font-size: 12px; }
+    .import-preview-row:last-child { border-bottom: none; }
+    .import-preview-co { font-weight: 500; color: var(--ink); min-width: 80px; }
+    .import-preview-pos { color: var(--ink-light); flex: 1; }
+    .import-preview-dup { font-size: 11px; color: #c0876a; }
   </style>
 </head>
 <body>
@@ -1368,30 +985,29 @@
 
   <!-- ════ 求职追踪视图 ════ -->
   <div id="job-view" class="view">
-
     <div class="job-stats-bar" id="job-stats-bar"></div>
-
     <div class="job-body">
       <div class="job-main-area">
         <div class="job-toolbar">
-          <button class="job-add-btn" onclick="openJobModal(null)">+ 新增投递</button>
+          <button class="job-add-btn" onclick="openPositionModal(null,null)">+ 新增投递</button>
+          <button class="job-import-btn" onclick="document.getElementById('excel-file-input').click()">📂 导入 Excel</button>
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelImport(this)">
           <select class="job-filter-select" id="job-filter-sel" onchange="renderJobList()">
-            <option value="">全部</option>
+            <option value="">全部状态</option>
             <option value="待回复">待回复</option>
             <option value="面试中">面试中</option>
             <option value="已拒绝">已拒绝</option>
             <option value="已Offer">已Offer</option>
           </select>
           <select class="job-filter-select" id="job-sort-sel" onchange="renderJobList()">
-            <option value="newest">最新投递</option>
-            <option value="oldest">最早投递</option>
-            <option value="deadline">截止优先</option>
+            <option value="newest">最新优先</option>
+            <option value="priority">优先级</option>
+            <option value="name">公司名称</option>
           </select>
         </div>
         <div id="job-card-list"></div>
         <div id="job-offer-cmp" class="job-offer-cmp" style="display:none;"></div>
       </div>
-
       <aside class="job-sidebar">
         <div class="sidebar-title">今日求职待办</div>
         <div class="todo-input-row">
@@ -1408,87 +1024,119 @@
         <div id="job-deadline-list"></div>
       </aside>
     </div>
-
   </div><!-- /job-view -->
 
 </main>
 
-<!-- ── 新增/编辑投递 模态 ── -->
-<div class="job-modal-overlay hidden" id="job-modal-overlay"
-     onclick="if(event.target===this)closeJobModal()">
+<!-- ── 新增/编辑岗位 模态 ── -->
+<div class="job-modal-overlay hidden" id="pos-modal-overlay"
+     onclick="if(event.target===this)closePosModal()">
   <div class="job-modal">
-    <div class="job-modal-title" id="jm-title">新增投递</div>
+    <div class="job-modal-title" id="pm-title">新增投递</div>
+    <div class="co-match-hint" id="pm-co-hint"></div>
     <div class="job-form-row">
       <div class="job-form-field">
         <label class="job-form-label">公司名称 *</label>
-        <input class="job-form-input" id="jf-company" placeholder="如：字节跳动" maxlength="50" />
+        <input class="job-form-input" id="pf-company" placeholder="如：字节跳动" maxlength="50" oninput="checkCompanyMatch()" />
       </div>
       <div class="job-form-field">
         <label class="job-form-label">应聘职位 *</label>
-        <input class="job-form-input" id="jf-position" placeholder="如：前端工程师" maxlength="60" />
+        <input class="job-form-input" id="pf-title" placeholder="如：前端工程师" maxlength="60" />
       </div>
     </div>
     <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">城市</label>
+        <input class="job-form-input" id="pf-city" placeholder="如：北京" maxlength="20" />
+      </div>
       <div class="job-form-field">
         <label class="job-form-label">投递日期</label>
-        <input class="job-form-input" id="jf-applydate" type="date" />
-      </div>
-      <div class="job-form-field">
-        <label class="job-form-label">投递渠道</label>
-        <input class="job-form-input" id="jf-channel" placeholder="官网 / Boss / 内推…" maxlength="30" />
+        <input class="job-form-input" id="pf-applydate" type="date" />
       </div>
     </div>
     <div class="job-form-row">
       <div class="job-form-field">
+        <label class="job-form-label">投递渠道</label>
+        <input class="job-form-input" id="pf-channel" placeholder="官网 / Boss / 内推…" maxlength="30" />
+      </div>
+      <div class="job-form-field">
         <label class="job-form-label">当前状态</label>
-        <select class="job-form-select" id="jf-status">
+        <select class="job-form-select" id="pf-status" onchange="togglePosOfferSection()">
           <option value="待回复">待回复</option>
           <option value="面试中">面试中</option>
           <option value="已拒绝">已拒绝</option>
           <option value="已Offer">已Offer</option>
         </select>
       </div>
+    </div>
+    <div class="job-form-row">
       <div class="job-form-field">
         <label class="job-form-label">截止日期（可选）</label>
-        <input class="job-form-input" id="jf-deadline" type="date" />
+        <input class="job-form-input" id="pf-deadline" type="date" />
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">招聘网址（可选）</label>
+        <input class="job-form-input" id="pf-url" placeholder="https://…" maxlength="200" />
       </div>
     </div>
-    <div id="jf-offer-section" style="display:none;">
+    <div id="pf-offer-section" style="display:none;">
       <div class="job-offer-sect-head">Offer 详情</div>
       <div class="job-form-row">
-        <div class="job-form-field">
-          <label class="job-form-label">薪资</label>
-          <input class="job-form-input" id="jf-salary" placeholder="如：30k×16" maxlength="40" />
-        </div>
-        <div class="job-form-field">
-          <label class="job-form-label">职级</label>
-          <input class="job-form-input" id="jf-level" placeholder="如：P6 / T2" maxlength="20" />
-        </div>
+        <div class="job-form-field"><label class="job-form-label">薪资</label><input class="job-form-input" id="pf-salary" placeholder="如：30k×16" maxlength="40" /></div>
+        <div class="job-form-field"><label class="job-form-label">职级</label><input class="job-form-input" id="pf-level" placeholder="如：P6 / T2" maxlength="20" /></div>
       </div>
       <div class="job-form-row">
-        <div class="job-form-field">
-          <label class="job-form-label">工作地点</label>
-          <input class="job-form-input" id="jf-location" placeholder="如：北京·朝阳" maxlength="40" />
-        </div>
-        <div class="job-form-field">
-          <label class="job-form-label">福利</label>
-          <input class="job-form-input" id="jf-benefits" placeholder="如：六险一金、餐补" maxlength="60" />
-        </div>
+        <div class="job-form-field"><label class="job-form-label">工作地点</label><input class="job-form-input" id="pf-location" placeholder="如：北京·朝阳" maxlength="40" /></div>
+        <div class="job-form-field"><label class="job-form-label">福利</label><input class="job-form-input" id="pf-benefits" placeholder="如：六险一金、餐补" maxlength="60" /></div>
       </div>
       <div class="job-form-row">
-        <div class="job-form-field">
-          <label class="job-form-label">Offer 截止日期</label>
-          <input class="job-form-input" id="jf-offerdeadline" type="date" />
-        </div>
-        <div class="job-form-field">
-          <label class="job-form-label">备注</label>
-          <input class="job-form-input" id="jf-offernotes" placeholder="其他说明…" maxlength="80" />
-        </div>
+        <div class="job-form-field"><label class="job-form-label">Offer 截止日期</label><input class="job-form-input" id="pf-offerdeadline" type="date" /></div>
+        <div class="job-form-field"><label class="job-form-label">备注</label><input class="job-form-input" id="pf-offernotes" placeholder="其他说明…" maxlength="80" /></div>
       </div>
     </div>
     <div class="job-modal-footer">
-      <button class="job-modal-cancel" onclick="closeJobModal()">取消</button>
-      <button class="job-modal-save"   onclick="saveJobModal()">保存</button>
+      <button class="job-modal-cancel" onclick="closePosModal()">取消</button>
+      <button class="job-modal-save"   onclick="savePosModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 编辑公司信息 模态 ── -->
+<div class="job-modal-overlay hidden" id="co-modal-overlay"
+     onclick="if(event.target===this)closeCoModal()">
+  <div class="job-modal" style="width:440px;">
+    <div class="job-modal-title">编辑公司信息</div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">公司名称 *</label>
+        <input class="job-form-input" id="cf-name" placeholder="公司名称" maxlength="50" />
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">优先级</label>
+        <select class="job-form-select" id="cf-priority">
+          <option value="高">高</option>
+          <option value="中">中</option>
+          <option value="低">低</option>
+        </select>
+      </div>
+    </div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">招聘网址</label>
+        <input class="job-form-input" id="cf-url" placeholder="https://…" maxlength="200" />
+      </div>
+    </div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">公司备注（HR 联系方式、内推人等）</label>
+        <textarea class="job-form-input" id="cf-notes" rows="3"
+                  placeholder="记录 HR 联系方式、内推人、公司文化等…"
+                  style="resize:vertical;min-height:60px;line-height:1.6"></textarea>
+      </div>
+    </div>
+    <div class="job-modal-footer">
+      <button class="job-modal-cancel" onclick="closeCoModal()">取消</button>
+      <button class="job-modal-save"   onclick="saveCoModal()">保存</button>
     </div>
   </div>
 </div>
@@ -1505,14 +1153,8 @@
       </div>
     </div>
     <div class="job-form-row">
-      <div class="job-form-field">
-        <label class="job-form-label">面试日期</label>
-        <input class="job-form-input" id="rf-date" type="date" />
-      </div>
-      <div class="job-form-field">
-        <label class="job-form-label">时间</label>
-        <input class="job-form-input" id="rf-time" type="time" />
-      </div>
+      <div class="job-form-field"><label class="job-form-label">面试日期</label><input class="job-form-input" id="rf-date" type="date" /></div>
+      <div class="job-form-field"><label class="job-form-label">时间</label><input class="job-form-input" id="rf-time" type="time" /></div>
     </div>
     <div class="job-form-row">
       <div class="job-form-field">
@@ -1540,6 +1182,19 @@
   </div>
 </div>
 
+<!-- ── Excel 导入预览 模态 ── -->
+<div class="job-modal-overlay hidden" id="import-modal-overlay">
+  <div class="job-modal" style="width:560px;">
+    <div class="job-modal-title">导入预览</div>
+    <div id="import-summary" style="font-size:13px;color:var(--ink-light);margin-bottom:4px;"></div>
+    <div class="import-preview-list" id="import-preview-list"></div>
+    <div class="job-modal-footer">
+      <button class="job-modal-cancel" onclick="closeImportModal()">取消</button>
+      <button class="job-modal-save"   onclick="confirmImport()">确认导入</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ════════════════════════════════════════
    Firebase 初始化
@@ -1560,7 +1215,7 @@ const db   = firebase.firestore();
 /* ════════════════════════════════════════
    数据层（内存缓存 + 防抖云写入）
 ════════════════════════════════════════ */
-let appData     = { notes: {}, todos: {}, weekNotes: {}, jobs: [], jobDailyTodos: {} };
+let appData     = { notes: {}, todos: {}, weekNotes: {}, companies: [], jobDailyTodos: {} };
 let currentUser = null;
 let saveTimer   = null;
 
@@ -1579,16 +1234,16 @@ function saveData(data) {
 async function loadDataFromCloud() {
   try {
     const snap = await db.doc(`users/${currentUser.uid}/planner/data`).get();
-    appData = snap.exists ? snap.data() : { notes: {}, todos: {}, weekNotes: {} };
-    // 确保子对象存在
+    appData = snap.exists ? snap.data() : { notes: {}, todos: {}, weekNotes: {}, companies: [], jobDailyTodos: {} };
     appData.notes         = appData.notes         || {};
     appData.todos         = appData.todos         || {};
     appData.weekNotes     = appData.weekNotes     || {};
-    appData.jobs          = appData.jobs          || [];
+    appData.companies     = appData.companies     || [];
     appData.jobDailyTodos = appData.jobDailyTodos || {};
+    migrateJobsToCompanies(appData);
   } catch (e) {
     console.error('加载数据失败', e);
-    appData = { notes: {}, todos: {}, weekNotes: {}, jobs: [], jobDailyTodos: {} };
+    appData = { notes: {}, todos: {}, weekNotes: {}, companies: [], jobDailyTodos: {} };
   }
 }
 
@@ -1633,7 +1288,7 @@ auth.onAuthStateChanged(async user => {
     renderCurrentView();
     setSyncBadge('synced');
   } else {
-    appData = { notes: {}, todos: {}, weekNotes: {}, jobs: [], jobDailyTodos: {} };
+    appData = { notes: {}, todos: {}, weekNotes: {}, companies: [], jobDailyTodos: {} };
     renderAuthArea(null);
     showLoginOverlay();
     showLoadingOverlay(false);
@@ -2033,10 +1688,35 @@ renderAuthArea(null); // 先渲染未登录状态
 /* ════════════════════════════════════════
    求职追踪 — 状态
 ════════════════════════════════════════ */
-let editingJobId  = null;
-let addRoundJobId = null;
-let expandedJobId = null;
-const openDebriefs = new Set(); // "jobId-roundIdx"
+let expandedCoId   = null;
+let expandedPosId  = null;
+let editingCoId    = null;
+let editingPosId   = null;
+let editingPosCo   = null;
+let addRoundPosId  = null;
+let addRoundCoId   = null;
+let pendingImport  = [];
+const openDebriefs = new Set();
+
+/* ── 数据迁移：jobs[] → companies[] ── */
+function migrateJobsToCompanies(data) {
+  if (!data.jobs || !data.jobs.length) return;
+  if (data.companies && data.companies.length) return;
+  const coMap = {};
+  data.jobs.forEach(job => {
+    const name = (job.company || '未知公司').trim();
+    if (!coMap[name]) {
+      coMap[name] = { id: Date.now() + Math.random(), name, url: '', notes: '', priority: '中', positions: [] };
+    }
+    coMap[name].positions.push({
+      id: job.id, title: job.position || '', city: '',
+      applyDate: job.applyDate || '', channel: job.channel || '',
+      status: job.status || '待回复', deadline: job.deadline || null,
+      interviews: job.interviews || [], offer: job.offer || null, notes: job.notes || ''
+    });
+  });
+  data.companies = Object.values(coMap);
+}
 
 /* ── 工具 ── */
 function daysUntil(dateStr) {
@@ -2055,45 +1735,58 @@ function renderJobView() {
 
 /* ── 统计面板 ── */
 function renderJobStats() {
-  const jobs      = loadData().jobs || [];
-  const total     = jobs.length;
-  const replied   = jobs.filter(j => j.status !== '待回复').length;
-  const replyR    = total ? Math.round(replied / total * 100) : 0;
-  const intvCount = jobs.filter(j => j.status === '面试中').length;
-  const offerCnt  = jobs.filter(j => j.status === '已Offer').length;
-  const rejCnt    = jobs.filter(j => j.status === '已拒绝').length;
+  const cos = loadData().companies || [];
+  let allPos = [];
+  cos.forEach(c => { allPos = allPos.concat(c.positions || []); });
+  const posTotal  = allPos.length;
+  const replied   = allPos.filter(p => p.status !== '待回复').length;
+  const replyR    = posTotal ? Math.round(replied / posTotal * 100) : 0;
+  const intvCount = allPos.filter(p => p.status === '面试中').length;
+  const offerCnt  = allPos.filter(p => p.status === '已Offer').length;
+  const rejCnt    = allPos.filter(p => p.status === '已拒绝').length;
   const passBase  = offerCnt + rejCnt;
   const passR     = passBase ? Math.round(offerCnt / passBase * 100) : 0;
-
   document.getElementById('job-stats-bar').innerHTML =
-    [['投递总数', total], ['回复率', replyR + '%'], ['进行中', intvCount],
-     ['Offer 数', offerCnt], ['面试通过率', passR + '%']]
-    .map(([l, n]) => `<div class="job-stat-item">
-      <span class="job-stat-num">${n}</span>
-      <span class="job-stat-label">${l}</span></div>`).join('');
+    [['投递公司数', cos.length], ['岗位总数', posTotal], ['回复率', replyR + '%'],
+     ['进行中', intvCount], ['Offer 数', offerCnt], ['面试通过率', passR + '%']]
+    .map(([l, n]) => `<div class="job-stat-item"><span class="job-stat-num">${n}</span><span class="job-stat-label">${l}</span></div>`).join('');
 }
 
-/* ── 卡片列表 ── */
+/* ── 公司卡片列表 ── */
 function renderJobList() {
   const data = loadData();
-  let jobs = (data.jobs || []).slice();
-
+  let cos = (data.companies || []).slice();
   const fv = (document.getElementById('job-filter-sel') || {}).value || '';
   const sv = (document.getElementById('job-sort-sel')   || {}).value || 'newest';
 
-  if (fv) jobs = jobs.filter(j => j.status === fv);
-  if (sv === 'newest')   jobs.sort((a, b) => b.id - a.id);
-  else if (sv === 'oldest')   jobs.sort((a, b) => a.id - b.id);
-  else if (sv === 'deadline') jobs.sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline));
+  if (fv) {
+    cos = cos.map(c => ({ ...c, positions: (c.positions || []).filter(p => p.status === fv) }))
+             .filter(c => c.positions.length > 0);
+  }
+  const PO = { '高': 0, '中': 1, '低': 2 };
+  if (sv === 'priority') {
+    cos.sort((a, b) => (PO[a.priority] ?? 1) - (PO[b.priority] ?? 1));
+  } else if (sv === 'name') {
+    cos.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    cos.sort((a, b) => {
+      const aMax = Math.max(...(a.positions || []).map(p => p.id || 0), 0);
+      const bMax = Math.max(...(b.positions || []).map(p => p.id || 0), 0);
+      return bMax - aMax;
+    });
+  }
 
   const container = document.getElementById('job-card-list');
-  if (!jobs.length) {
-    container.innerHTML = `<div style="text-align:center;padding:52px 0;color:var(--ink-light);font-size:13px;line-height:2.2">
-      暂无投递记录<br><span style="font-size:11px">点击上方「+ 新增投递」开始记录求职进度</span></div>`;
+  if (!cos.length) {
+    container.innerHTML = `<div style="text-align:center;padding:52px 0;color:var(--ink-light);font-size:13px;line-height:2.2">暂无投递记录<br><span style="font-size:11px">点击上方「+ 新增投递」开始记录</span></div>`;
   } else {
-    container.innerHTML = jobs.map(buildJobCardHTML).join('');
-    if (expandedJobId) {
-      const el = container.querySelector(`.job-card[data-id="${expandedJobId}"]`);
+    container.innerHTML = cos.map(buildCoCardHTML).join('');
+    if (expandedCoId) {
+      const el = container.querySelector(`.co-card[data-id="${expandedCoId}"]`);
+      if (el) el.classList.add('expanded');
+    }
+    if (expandedPosId) {
+      const el = container.querySelector(`.pos-card[data-id="${expandedPosId}"]`);
       if (el) el.classList.add('expanded');
     }
     openDebriefs.forEach(key => {
@@ -2104,262 +1797,400 @@ function renderJobList() {
   renderOfferTable();
 }
 
-function buildJobCardHTML(job) {
-  const days = daysUntil(job.deadline);
-  let dlTag = '';
-  if (job.deadline) {
-    if      (days < 0)    dlTag = `<span class="job-deadline-tag expired">截止已过</span>`;
-    else if (days === 0)  dlTag = `<span class="job-deadline-tag urgent">⚡ 今天截止</span>`;
-    else if (days <= 3)   dlTag = `<span class="job-deadline-tag urgent">⚡ ${days}天后截止</span>`;
-    else                  dlTag = `<span class="job-deadline-tag">截止 ${job.deadline}</span>`;
-  }
+/* ── 公司卡片 HTML ── */
+function buildCoCardHTML(co) {
+  const positions = co.positions || [];
+  const sc = {};
+  positions.forEach(p => { sc[p.status] = (sc[p.status] || 0) + 1; });
+  const parts = [`${positions.length} 个岗位`];
+  ['面试中','待回复','已Offer','已拒绝'].forEach(s => { if (sc[s]) parts.push(`${sc[s]} ${s}`); });
 
-  const bCls = {'面试中':'s-interviewing','已Offer':'s-offer','已拒绝':'s-rejected'}[job.status] || '';
+  const pLabel = co.priority || '中';
+  const urlHtml = co.url
+    ? `<a class="co-url-link" href="${escHtml(co.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="打开招聘页面">🔗</a>`
+    : '';
 
-  const meta = [];
-  if (job.applyDate) meta.push(`投递：${job.applyDate}`);
-  if (job.channel)   meta.push(`渠道：${escHtml(job.channel)}`);
-  const lastInt = (job.interviews || []).slice(-1)[0];
-  if (lastInt) meta.push(`${escHtml(lastInt.round)} · ${lastInt.date}${lastInt.time ? ' ' + lastInt.time : ''} · ${lastInt.format}`);
-
-  const intRows = (job.interviews || []).map((iv, idx) => {
-    const rStyle = iv.result === '通过'   ? 'color:#7aab7a' :
-                   iv.result === '未通过' ? 'color:#c0876a' : 'color:var(--ink-light)';
-    return `
-      <div class="job-int-row">
-        <span class="job-int-round">${escHtml(iv.round)}</span>
-        <div class="job-int-info">${escHtml(iv.date)}${iv.time ? ' ' + escHtml(iv.time) : ''} · ${escHtml(iv.format)}${iv.result ? `<span style="font-size:11px;margin-left:6px;${rStyle}">${escHtml(iv.result)}</span>` : ''}</div>
-        <div class="job-int-actions">
-          <button class="job-debrief-btn" onclick="toggleDebrief(${job.id},${idx})">复盘</button>
-          <button class="job-del-btn" onclick="deleteInterview(${job.id},${idx})" title="删除">×</button>
-        </div>
+  return `
+  <div class="co-card" data-id="${co.id}" data-priority="${escHtml(pLabel)}">
+    <div class="co-card-header" onclick="toggleCoCard(${co.id})">
+      <span class="co-name">${escHtml(co.name)}</span>
+      ${urlHtml}
+      <span class="co-priority-tag" data-p="${escHtml(pLabel)}"
+            onclick="event.stopPropagation();cyclePriority(${co.id})"
+            title="点击切换优先级">${escHtml(pLabel)}</span>
+      <span class="co-summary">${escHtml(parts.join(' · '))}</span>
+      <span class="co-expand-arrow">›</span>
+    </div>
+    <div class="co-card-body">
+      <span class="co-notes-label">公司备注（HR联系方式、内推人…）</span>
+      <textarea class="co-notes-ta" data-coid="${co.id}"
+                oninput="saveCoNotes(this)"
+                placeholder="记录 HR 联系方式、内推人、公司文化等…">${escHtml(co.notes || '')}</textarea>
+      <div class="pos-list">${positions.map(p => buildPosCardHTML(p, co.id)).join('')}</div>
+      <div class="co-action-row">
+        <button class="job-card-btn" onclick="openPositionModal(${co.id},null)">+ 添加岗位</button>
+        <button class="job-card-btn" onclick="openCoModal(${co.id})">编辑公司</button>
+        <button class="job-card-btn danger" onclick="deleteCompany(${co.id})">删除公司</button>
       </div>
-      <div class="job-debrief" id="db-${job.id}-${idx}">
-        <div class="job-debrief-field">
-          <label class="job-debrief-label">被问到的问题</label>
-          <textarea class="job-debrief-ta" data-jid="${job.id}" data-idx="${idx}" data-field="questions"
-                    oninput="saveDebrief(this)" placeholder="记录面试中遇到的问题…">${escHtml(iv.questions || '')}</textarea>
-        </div>
-        <div class="job-debrief-field">
-          <label class="job-debrief-label">我的回答</label>
-          <textarea class="job-debrief-ta" data-jid="${job.id}" data-idx="${idx}" data-field="myAnswers"
-                    oninput="saveDebrief(this)" placeholder="自己的回答思路…">${escHtml(iv.myAnswers || '')}</textarea>
-        </div>
-        <div class="job-debrief-field" style="margin-bottom:0">
-          <label class="job-debrief-label">待改进</label>
-          <textarea class="job-debrief-ta" data-jid="${job.id}" data-idx="${idx}" data-field="improvements"
-                    oninput="saveDebrief(this)" placeholder="哪里回答得不好，下次如何改进…">${escHtml(iv.improvements || '')}</textarea>
-        </div>
-      </div>`;
+    </div>
+  </div>`;
+}
+
+/* ── 岗位子卡片 HTML ── */
+function buildPosCardHTML(pos, coId) {
+  const days = daysUntil(pos.deadline);
+  let dlTag = '';
+  if (pos.deadline) {
+    if      (days < 0)   dlTag = `<span class="pos-deadline-tag expired">截止已过</span>`;
+    else if (days === 0) dlTag = `<span class="pos-deadline-tag urgent">⚡ 今天截止</span>`;
+    else if (days <= 3)  dlTag = `<span class="pos-deadline-tag urgent">⚡ ${days}天后截止</span>`;
+    else                 dlTag = `<span class="pos-deadline-tag">截止 ${pos.deadline}</span>`;
+  }
+  const sCls = {'面试中':'s-interviewing','已Offer':'s-offer','已拒绝':'s-rejected'}[pos.status] || '';
+
+  const intRows = (pos.interviews || []).map((iv, idx) => {
+    const rStyle = iv.result === '通过' ? 'color:#7aab7a' : iv.result === '未通过' ? 'color:#c0876a' : 'color:var(--ink-light)';
+    return `
+    <div class="job-int-row">
+      <span class="job-int-round">${escHtml(iv.round)}</span>
+      <div class="job-int-info">${escHtml(iv.date)}${iv.time ? ' ' + escHtml(iv.time) : ''} · ${escHtml(iv.format)}${iv.result ? `<span style="font-size:11px;margin-left:6px;${rStyle}">${escHtml(iv.result)}</span>` : ''}</div>
+      <div class="job-int-actions">
+        <button class="job-debrief-btn" onclick="toggleDebrief(${pos.id},${idx})">复盘</button>
+        <button class="job-del-btn" onclick="deleteInterview(${coId},${pos.id},${idx})" title="删除">×</button>
+      </div>
+    </div>
+    <div class="job-debrief" id="db-${pos.id}-${idx}">
+      <div class="job-debrief-field"><label class="job-debrief-label">被问到的问题</label>
+        <textarea class="job-debrief-ta" data-coid="${coId}" data-pid="${pos.id}" data-idx="${idx}" data-field="questions"
+                  oninput="saveDebrief(this)" placeholder="记录面试中遇到的问题…">${escHtml(iv.questions || '')}</textarea></div>
+      <div class="job-debrief-field"><label class="job-debrief-label">我的回答</label>
+        <textarea class="job-debrief-ta" data-coid="${coId}" data-pid="${pos.id}" data-idx="${idx}" data-field="myAnswers"
+                  oninput="saveDebrief(this)" placeholder="自己的回答思路…">${escHtml(iv.myAnswers || '')}</textarea></div>
+      <div class="job-debrief-field" style="margin-bottom:0"><label class="job-debrief-label">待改进</label>
+        <textarea class="job-debrief-ta" data-coid="${coId}" data-pid="${pos.id}" data-idx="${idx}" data-field="improvements"
+                  oninput="saveDebrief(this)" placeholder="哪里回答得不好，下次如何改进…">${escHtml(iv.improvements || '')}</textarea></div>
+    </div>`;
   }).join('');
 
-  const offerHtml = (job.status === '已Offer' && job.offer) ? `
+  const offerHtml = (pos.status === '已Offer' && pos.offer) ? `
     <div class="job-sect-title">Offer 详情</div>
     <div class="job-offer-info">
-      ${[['薪资', job.offer.salary], ['职级', job.offer.level], ['地点', job.offer.location],
-         ['福利', job.offer.benefits], ['Offer截止', job.offer.offerDeadline], ['备注', job.offer.notes]]
-        .filter(([, v]) => v)
-        .map(([l, v]) => `<div class="job-offer-f"><span class="job-offer-fl">${l}</span><span class="job-offer-fv">${escHtml(v)}</span></div>`)
+      ${[['薪资',pos.offer.salary],['职级',pos.offer.level],['地点',pos.offer.location],
+         ['福利',pos.offer.benefits],['Offer截止',pos.offer.offerDeadline],['备注',pos.offer.notes]]
+        .filter(([,v])=>v)
+        .map(([l,v])=>`<div class="job-offer-f"><span class="job-offer-fl">${l}</span><span class="job-offer-fv">${escHtml(v)}</span></div>`)
         .join('')}
     </div>` : '';
 
   return `
-    <div class="job-card" data-id="${job.id}" data-status="${escHtml(job.status)}">
-      <div class="job-card-header" onclick="toggleJobCard(${job.id})">
-        <span class="job-co-name">${escHtml(job.company || '（未填写）')}</span>
-        <span class="job-pos-name">${escHtml(job.position || '')}</span>
-        <span class="job-sbadge ${bCls}">${escHtml(job.status)}</span>
-        ${dlTag}
+  <div class="pos-card" data-id="${pos.id}">
+    <div class="pos-card-header" onclick="togglePosCard(${pos.id})">
+      <span class="pos-title">${escHtml(pos.title || '（未填写）')}</span>
+      ${pos.city ? `<span class="pos-city">📍 ${escHtml(pos.city)}</span>` : ''}
+      <span class="pos-sbadge ${sCls}">${escHtml(pos.status)}</span>
+      ${dlTag}
+      ${pos.applyDate ? `<span class="pos-date">投递 ${pos.applyDate}</span>` : ''}
+    </div>
+    <div class="pos-card-detail">
+      <div class="job-detail-head">
+        <span style="font-size:11px;color:var(--ink-light);">状态</span>
+        <select class="job-status-select" onchange="updatePosStatus(${coId},${pos.id},this.value)">
+          <option value="待回复"  ${pos.status==='待回复' ?'selected':''}>待回复</option>
+          <option value="面试中"  ${pos.status==='面试中' ?'selected':''}>面试中</option>
+          <option value="已拒绝"  ${pos.status==='已拒绝' ?'selected':''}>已拒绝</option>
+          <option value="已Offer" ${pos.status==='已Offer'?'selected':''}>已Offer</option>
+        </select>
       </div>
-      ${meta.length ? `<div class="job-card-meta">${meta.map(p => `<span>${p}</span>`).join('')}</div>` : ''}
-      <div class="job-card-detail">
-        <div class="job-detail-head">
-          <span style="font-size:11px;color:var(--ink-light);">状态</span>
-          <select class="job-status-select" onchange="updateJobStatus(${job.id}, this.value)">
-            <option value="待回复"  ${job.status === '待回复'  ? 'selected' : ''}>待回复</option>
-            <option value="面试中"  ${job.status === '面试中'  ? 'selected' : ''}>面试中</option>
-            <option value="已拒绝"  ${job.status === '已拒绝'  ? 'selected' : ''}>已拒绝</option>
-            <option value="已Offer" ${job.status === '已Offer' ? 'selected' : ''}>已Offer</option>
-          </select>
-        </div>
-        ${job.interviews && job.interviews.length
-          ? `<div class="job-sect-title">面试记录</div>${intRows}` : ''}
-        <button class="job-add-int-btn" onclick="openRoundModal(${job.id})">+ 添加面试记录</button>
-        ${offerHtml}
-        <div class="job-sect-title" style="margin-top:10px;">备注</div>
-        <textarea class="job-notes-ta" data-jid="${job.id}" data-field="notes"
-                  oninput="saveJobNotes(this)"
-                  placeholder="记录这个职位的其他信息…">${escHtml(job.notes || '')}</textarea>
-        <div class="job-card-btns">
-          <button class="job-card-btn" onclick="openJobModal(${job.id})">编辑</button>
-          <button class="job-card-btn danger" onclick="deleteJob(${job.id})">删除</button>
-        </div>
+      ${pos.interviews && pos.interviews.length ? `<div class="job-sect-title">面试记录</div>${intRows}` : ''}
+      <button class="job-add-int-btn" onclick="openRoundModal(${coId},${pos.id})">+ 添加面试记录</button>
+      ${offerHtml}
+      <div class="job-sect-title" style="margin-top:10px;">备注</div>
+      <textarea class="job-notes-ta" data-coid="${coId}" data-pid="${pos.id}"
+                oninput="savePosNotes(this)"
+                placeholder="记录这个岗位的其他信息…">${escHtml(pos.notes || '')}</textarea>
+      <div class="pos-card-btns">
+        <button class="job-card-btn" onclick="openPositionModal(${coId},${pos.id})">编辑岗位</button>
+        <button class="job-card-btn danger" onclick="deletePosition(${coId},${pos.id})">删除岗位</button>
       </div>
-    </div>`;
+    </div>
+  </div>`;
 }
 
-function toggleJobCard(jobId) {
-  const el = document.querySelector(`.job-card[data-id="${jobId}"]`);
+/* ── 折叠展开 ── */
+function toggleCoCard(coId) {
+  const el = document.querySelector(`.co-card[data-id="${coId}"]`);
   if (!el) return;
   const wasExpanded = el.classList.contains('expanded');
-  document.querySelectorAll('.job-card.expanded').forEach(c => c.classList.remove('expanded'));
-  expandedJobId = null;
-  if (!wasExpanded) {
-    el.classList.add('expanded');
-    expandedJobId = jobId;
-  }
+  document.querySelectorAll('.co-card.expanded').forEach(c => c.classList.remove('expanded'));
+  expandedCoId = null;
+  if (!wasExpanded) { el.classList.add('expanded'); expandedCoId = coId; }
 }
 
-/* ── 复盘（不触发列表重渲染，直接更新 appData） ── */
-function toggleDebrief(jobId, idx) {
-  const key = `${jobId}-${idx}`;
+function togglePosCard(posId) {
+  const el = document.querySelector(`.pos-card[data-id="${posId}"]`);
+  if (!el) return;
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.pos-card.expanded').forEach(c => c.classList.remove('expanded'));
+  expandedPosId = null;
+  if (!wasExpanded) { el.classList.add('expanded'); expandedPosId = posId; }
+}
+
+function toggleDebrief(posId, idx) {
+  const key = `${posId}-${idx}`;
   const el  = document.getElementById(`db-${key}`);
   if (!el) return;
-  if (el.classList.contains('open')) {
-    el.classList.remove('open');
-    openDebriefs.delete(key);
-  } else {
-    el.classList.add('open');
-    openDebriefs.add(key);
+  if (el.classList.contains('open')) { el.classList.remove('open'); openDebriefs.delete(key); }
+  else { el.classList.add('open'); openDebriefs.add(key); }
+}
+
+/* ── 内联保存（不触发重渲染） ── */
+function saveDebrief(textarea) {
+  const data  = loadData();
+  const coId  = Number(textarea.dataset.coid);
+  const posId = Number(textarea.dataset.pid);
+  const idx   = Number(textarea.dataset.idx);
+  const field = textarea.dataset.field;
+  const co  = (data.companies || []).find(c => c.id === coId);
+  const pos = co && (co.positions || []).find(p => p.id === posId);
+  if (!pos || !pos.interviews[idx]) return;
+  pos.interviews[idx][field] = textarea.value;
+  saveData(data);
+}
+
+function savePosNotes(textarea) {
+  const data  = loadData();
+  const coId  = Number(textarea.dataset.coid);
+  const posId = Number(textarea.dataset.pid);
+  const co  = (data.companies || []).find(c => c.id === coId);
+  const pos = co && (co.positions || []).find(p => p.id === posId);
+  if (!pos) return;
+  pos.notes = textarea.value;
+  saveData(data);
+}
+
+function saveCoNotes(textarea) {
+  const data = loadData();
+  const coId = Number(textarea.dataset.coid);
+  const co   = (data.companies || []).find(c => c.id === coId);
+  if (!co) return;
+  co.notes = textarea.value;
+  saveData(data);
+}
+
+function cyclePriority(coId) {
+  const data  = loadData();
+  const co    = (data.companies || []).find(c => c.id === coId);
+  if (!co) return;
+  const cycle = ['高', '中', '低'];
+  co.priority = cycle[(cycle.indexOf(co.priority || '中') + 1) % cycle.length];
+  saveData(data);
+  renderJobList();
+  // Restore expanded states
+  if (expandedCoId) {
+    const el = document.querySelector(`.co-card[data-id="${expandedCoId}"]`);
+    if (el) el.classList.add('expanded');
   }
 }
 
-function saveDebrief(textarea) {
-  const data  = loadData();
-  const jobId = Number(textarea.dataset.jid);
-  const idx   = Number(textarea.dataset.idx);
-  const field = textarea.dataset.field;
-  const job   = (data.jobs || []).find(j => j.id === jobId);
-  if (!job || !job.interviews[idx]) return;
-  job.interviews[idx][field] = textarea.value;
-  saveData(data);
-}
-
-function saveJobNotes(textarea) {
-  const data  = loadData();
-  const jobId = Number(textarea.dataset.jid);
-  const job   = (data.jobs || []).find(j => j.id === jobId);
-  if (!job) return;
-  job.notes = textarea.value;
-  saveData(data);
-}
-
-/* ── 新增/编辑 模态 ── */
-function openJobModal(jobId) {
-  editingJobId = jobId;
+/* ── 岗位模态（新增/编辑） ── */
+function openPositionModal(coId, posId) {
+  editingCoId  = coId;
+  editingPosId = posId;
   const data = loadData();
-  const job  = jobId ? (data.jobs || []).find(j => j.id === jobId) : null;
+  const co   = coId ? (data.companies || []).find(c => c.id === coId) : null;
+  const pos  = (co && posId) ? (co.positions || []).find(p => p.id === posId) : null;
 
-  document.getElementById('jm-title').textContent       = job ? '编辑投递' : '新增投递';
-  document.getElementById('jf-company').value           = job ? (job.company   || '') : '';
-  document.getElementById('jf-position').value          = job ? (job.position  || '') : '';
-  document.getElementById('jf-applydate').value         = job ? (job.applyDate || '') : fmtDateKey(today);
-  document.getElementById('jf-channel').value           = job ? (job.channel   || '') : '';
-  document.getElementById('jf-status').value            = job ? (job.status    || '待回复') : '待回复';
-  document.getElementById('jf-deadline').value          = job ? (job.deadline  || '') : '';
+  document.getElementById('pm-title').textContent = pos ? '编辑岗位' : '新增投递';
+  const coNameEl = document.getElementById('pf-company');
+  coNameEl.value = pos ? (co ? co.name : '') : '';
+  coNameEl.readOnly = !!pos; // editing a position → company name is readonly
+  document.getElementById('pf-title').value      = pos ? (pos.title     || '') : '';
+  document.getElementById('pf-city').value       = pos ? (pos.city      || '') : '';
+  document.getElementById('pf-applydate').value  = pos ? (pos.applyDate || '') : fmtDateKey(today);
+  document.getElementById('pf-channel').value    = pos ? (pos.channel   || '') : '';
+  document.getElementById('pf-status').value     = pos ? (pos.status    || '待回复') : '待回复';
+  document.getElementById('pf-deadline').value   = pos ? (pos.deadline  || '') : '';
+  document.getElementById('pf-url').value        = co  ? (co.url        || '') : '';
+  document.getElementById('pm-co-hint').classList.remove('show');
+  document.getElementById('pm-co-hint').textContent = '';
 
-  const offer = job && job.offer ? job.offer : {};
-  document.getElementById('jf-salary').value       = offer.salary       || '';
-  document.getElementById('jf-level').value        = offer.level        || '';
-  document.getElementById('jf-location').value     = offer.location     || '';
-  document.getElementById('jf-benefits').value     = offer.benefits     || '';
-  document.getElementById('jf-offerdeadline').value = offer.offerDeadline || '';
-  document.getElementById('jf-offernotes').value   = offer.notes        || '';
+  const offer = pos && pos.offer ? pos.offer : {};
+  document.getElementById('pf-salary').value       = offer.salary       || '';
+  document.getElementById('pf-level').value        = offer.level        || '';
+  document.getElementById('pf-location').value     = offer.location     || '';
+  document.getElementById('pf-benefits').value     = offer.benefits     || '';
+  document.getElementById('pf-offerdeadline').value = offer.offerDeadline || '';
+  document.getElementById('pf-offernotes').value   = offer.notes        || '';
+  togglePosOfferSection();
 
-  const toggleOffer = () => {
-    const show = document.getElementById('jf-status').value === '已Offer';
-    document.getElementById('jf-offer-section').style.display = show ? '' : 'none';
-  };
-  toggleOffer();
-  document.getElementById('jf-status').onchange = toggleOffer;
-
-  document.getElementById('job-modal-overlay').classList.remove('hidden');
-  document.getElementById('jf-company').focus();
+  document.getElementById('pos-modal-overlay').classList.remove('hidden');
+  if (!pos) document.getElementById('pf-company').focus();
+  else document.getElementById('pf-title').focus();
 }
 
-function closeJobModal() {
-  editingJobId = null;
-  document.getElementById('job-modal-overlay').classList.add('hidden');
+function closePosModal() {
+  editingCoId = null; editingPosId = null;
+  document.getElementById('pos-modal-overlay').classList.add('hidden');
 }
 
-function saveJobModal() {
-  const company  = document.getElementById('jf-company').value.trim();
-  const position = document.getElementById('jf-position').value.trim();
-  if (!company || !position) { alert('请填写公司名称和应聘职位'); return; }
+function togglePosOfferSection() {
+  const show = document.getElementById('pf-status').value === '已Offer';
+  document.getElementById('pf-offer-section').style.display = show ? '' : 'none';
+}
 
-  const status = document.getElementById('jf-status').value;
+function checkCompanyMatch() {
+  if (editingPosId) return; // editing existing position, no need to check
+  const name = document.getElementById('pf-company').value.trim();
+  const hint = document.getElementById('pm-co-hint');
+  if (!name) { hint.classList.remove('show'); return; }
+  const existing = (loadData().companies || []).find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    hint.textContent = `已找到「${existing.name}」，保存后将在该公司下添加新岗位。`;
+    hint.classList.add('show');
+  } else {
+    hint.classList.remove('show');
+  }
+}
+
+function savePosModal() {
+  const title = document.getElementById('pf-title').value.trim();
+  if (!title) { alert('请填写应聘职位'); return; }
+
+  const coName = document.getElementById('pf-company').value.trim();
+  if (!editingPosId && !coName) { alert('请填写公司名称'); return; }
+
+  const status = document.getElementById('pf-status').value;
   const offer  = status === '已Offer' ? {
-    salary:        document.getElementById('jf-salary').value.trim(),
-    level:         document.getElementById('jf-level').value.trim(),
-    location:      document.getElementById('jf-location').value.trim(),
-    benefits:      document.getElementById('jf-benefits').value.trim(),
-    offerDeadline: document.getElementById('jf-offerdeadline').value,
-    notes:         document.getElementById('jf-offernotes').value.trim()
+    salary:        document.getElementById('pf-salary').value.trim(),
+    level:         document.getElementById('pf-level').value.trim(),
+    location:      document.getElementById('pf-location').value.trim(),
+    benefits:      document.getElementById('pf-benefits').value.trim(),
+    offerDeadline: document.getElementById('pf-offerdeadline').value,
+    notes:         document.getElementById('pf-offernotes').value.trim()
   } : null;
 
   const data = loadData();
-  data.jobs = data.jobs || [];
+  data.companies = data.companies || [];
 
-  if (editingJobId) {
-    const job = data.jobs.find(j => j.id === editingJobId);
-    if (job) {
-      job.company   = company;
-      job.position  = position;
-      job.applyDate = document.getElementById('jf-applydate').value;
-      job.channel   = document.getElementById('jf-channel').value.trim();
-      job.status    = status;
-      job.deadline  = document.getElementById('jf-deadline').value || null;
-      job.offer     = offer;
+  if (editingPosId && editingCoId) {
+    // Edit existing position
+    const co  = data.companies.find(c => c.id === editingCoId);
+    const pos = co && co.positions.find(p => p.id === editingPosId);
+    if (pos) {
+      pos.title     = title;
+      pos.city      = document.getElementById('pf-city').value.trim();
+      pos.applyDate = document.getElementById('pf-applydate').value;
+      pos.channel   = document.getElementById('pf-channel').value.trim();
+      pos.status    = status;
+      pos.deadline  = document.getElementById('pf-deadline').value || null;
+      pos.offer     = offer;
     }
+    // Also update co url if provided
+    if (co) co.url = document.getElementById('pf-url').value.trim() || co.url;
   } else {
-    data.jobs.push({
-      id: Date.now(), company, position,
-      applyDate:  document.getElementById('jf-applydate').value,
-      channel:    document.getElementById('jf-channel').value.trim(),
-      status, deadline: document.getElementById('jf-deadline').value || null,
+    // New position: find or create company
+    let co = data.companies.find(c => c.name.toLowerCase() === coName.toLowerCase());
+    if (!co) {
+      co = { id: Date.now(), name: coName, url: document.getElementById('pf-url').value.trim(), notes: '', priority: '中', positions: [] };
+      data.companies.push(co);
+    } else if (document.getElementById('pf-url').value.trim()) {
+      co.url = co.url || document.getElementById('pf-url').value.trim();
+    }
+    co.positions.push({
+      id: Date.now() + Math.random(), title,
+      city:      document.getElementById('pf-city').value.trim(),
+      applyDate: document.getElementById('pf-applydate').value,
+      channel:   document.getElementById('pf-channel').value.trim(),
+      status, deadline: document.getElementById('pf-deadline').value || null,
       interviews: [], offer, notes: ''
     });
+    expandedCoId = co.id;
   }
 
   saveData(data);
-  closeJobModal();
+  closePosModal();
   renderJobView();
 }
 
-function deleteJob(jobId) {
-  if (!confirm('确定删除这条投递记录？此操作不可恢复。')) return;
+function deletePosition(coId, posId) {
+  if (!confirm('确定删除该岗位记录？')) return;
   const data = loadData();
-  data.jobs  = (data.jobs || []).filter(j => j.id !== jobId);
-  if (expandedJobId === jobId) expandedJobId = null;
+  const co   = (data.companies || []).find(c => c.id === coId);
+  if (!co) return;
+  co.positions = co.positions.filter(p => p.id !== posId);
+  if (expandedPosId === posId) expandedPosId = null;
   saveData(data);
   renderJobView();
 }
 
-function updateJobStatus(jobId, newStatus) {
+function deleteCompany(coId) {
+  if (!confirm('确定删除该公司及其所有岗位记录？此操作不可恢复。')) return;
   const data = loadData();
-  const job  = (data.jobs || []).find(j => j.id === jobId);
-  if (!job) return;
-  job.status = newStatus;
-  if (newStatus === '已Offer' && !job.offer) {
-    job.offer = { salary: '', level: '', location: '', benefits: '', offerDeadline: '', notes: '' };
+  data.companies = (data.companies || []).filter(c => c.id !== coId);
+  if (expandedCoId === coId) expandedCoId = null;
+  saveData(data);
+  renderJobView();
+}
+
+function updatePosStatus(coId, posId, newStatus) {
+  const data = loadData();
+  const co   = (data.companies || []).find(c => c.id === coId);
+  const pos  = co && (co.positions || []).find(p => p.id === posId);
+  if (!pos) return;
+  pos.status = newStatus;
+  if (newStatus === '已Offer' && !pos.offer) {
+    pos.offer = { salary: '', level: '', location: '', benefits: '', offerDeadline: '', notes: '' };
   }
   saveData(data);
-  const savedExpanded = expandedJobId;
+  const savedCoId  = expandedCoId;
+  const savedPosId = expandedPosId;
   renderJobView();
-  expandedJobId = savedExpanded;
-  const el = document.querySelector(`.job-card[data-id="${savedExpanded}"]`);
-  if (el) {
-    el.classList.add('expanded');
-    openDebriefs.forEach(key => {
-      const el2 = document.getElementById(`db-${key}`);
-      if (el2) el2.classList.add('open');
-    });
+  expandedCoId  = savedCoId;
+  expandedPosId = savedPosId;
+  const coEl  = document.querySelector(`.co-card[data-id="${savedCoId}"]`);
+  if (coEl) coEl.classList.add('expanded');
+  const posEl = document.querySelector(`.pos-card[data-id="${savedPosId}"]`);
+  if (posEl) { posEl.classList.add('expanded'); openDebriefs.forEach(k => { const e = document.getElementById(`db-${k}`); if (e) e.classList.add('open'); }); }
+}
+
+/* ── 公司编辑模态 ── */
+function openCoModal(coId) {
+  editingCoId = coId;
+  const co = (loadData().companies || []).find(c => c.id === coId);
+  if (!co) return;
+  document.getElementById('cf-name').value     = co.name     || '';
+  document.getElementById('cf-priority').value = co.priority || '中';
+  document.getElementById('cf-url').value      = co.url      || '';
+  document.getElementById('cf-notes').value    = co.notes    || '';
+  document.getElementById('co-modal-overlay').classList.remove('hidden');
+  document.getElementById('cf-name').focus();
+}
+
+function closeCoModal() {
+  editingCoId = null;
+  document.getElementById('co-modal-overlay').classList.add('hidden');
+}
+
+function saveCoModal() {
+  const name = document.getElementById('cf-name').value.trim();
+  if (!name) { alert('请填写公司名称'); return; }
+  const data = loadData();
+  const co   = (data.companies || []).find(c => c.id === editingCoId);
+  if (co) {
+    co.name     = name;
+    co.priority = document.getElementById('cf-priority').value;
+    co.url      = document.getElementById('cf-url').value.trim();
+    co.notes    = document.getElementById('cf-notes').value;
   }
+  saveData(data);
+  closeCoModal();
+  renderJobView();
 }
 
 /* ── 面试轮次 模态 ── */
-function openRoundModal(jobId) {
-  addRoundJobId = jobId;
+function openRoundModal(coId, posId) {
+  addRoundCoId  = coId;
+  addRoundPosId = posId;
   document.getElementById('rf-round').value  = '';
   document.getElementById('rf-date').value   = fmtDateKey(today);
   document.getElementById('rf-time').value   = '';
@@ -2370,98 +2201,191 @@ function openRoundModal(jobId) {
 }
 
 function closeRoundModal() {
-  addRoundJobId = null;
+  addRoundCoId = null; addRoundPosId = null;
   document.getElementById('job-round-modal-overlay').classList.add('hidden');
 }
 
 function saveRoundModal() {
   const round = document.getElementById('rf-round').value.trim();
   if (!round) { alert('请填写面试轮次'); return; }
-
   const data = loadData();
-  const job  = (data.jobs || []).find(j => j.id === addRoundJobId);
-  if (!job) { closeRoundModal(); return; }
-
-  job.interviews = job.interviews || [];
-  job.interviews.push({
+  const co   = (data.companies || []).find(c => c.id === addRoundCoId);
+  const pos  = co && (co.positions || []).find(p => p.id === addRoundPosId);
+  if (!pos) { closeRoundModal(); return; }
+  pos.interviews = pos.interviews || [];
+  pos.interviews.push({
     round,
-    date:         document.getElementById('rf-date').value,
-    time:         document.getElementById('rf-time').value,
-    format:       document.getElementById('rf-format').value,
-    result:       document.getElementById('rf-result').value,
+    date:   document.getElementById('rf-date').value,
+    time:   document.getElementById('rf-time').value,
+    format: document.getElementById('rf-format').value,
+    result: document.getElementById('rf-result').value,
     questions: '', myAnswers: '', improvements: ''
   });
-
-  if (job.status === '待回复') job.status = '面试中';
-
+  if (pos.status === '待回复') pos.status = '面试中';
   saveData(data);
-  const savedId = addRoundJobId;
+  const savedCo  = addRoundCoId;
+  const savedPos = addRoundPosId;
   closeRoundModal();
   renderJobView();
-  // Restore expanded state
-  expandedJobId = savedId;
-  const el = document.querySelector(`.job-card[data-id="${savedId}"]`);
-  if (el) el.classList.add('expanded');
+  expandedCoId  = savedCo;
+  expandedPosId = savedPos;
+  const coEl = document.querySelector(`.co-card[data-id="${savedCo}"]`);
+  if (coEl) coEl.classList.add('expanded');
+  const posEl = document.querySelector(`.pos-card[data-id="${savedPos}"]`);
+  if (posEl) posEl.classList.add('expanded');
 }
 
-function deleteInterview(jobId, idx) {
+function deleteInterview(coId, posId, idx) {
   const data = loadData();
-  const job  = (data.jobs || []).find(j => j.id === jobId);
-  if (!job) return;
-  job.interviews.splice(idx, 1);
-  // Re-key openDebriefs for this job (indices shift)
+  const co   = (data.companies || []).find(c => c.id === coId);
+  const pos  = co && (co.positions || []).find(p => p.id === posId);
+  if (!pos) return;
+  pos.interviews.splice(idx, 1);
   const newOpen = new Set();
   openDebriefs.forEach(key => {
-    const [jid, i] = key.split('-').map(Number);
-    if (jid !== jobId) { newOpen.add(key); return; }
+    const [pid, i] = key.split('-').map(Number);
+    if (pid !== posId) { newOpen.add(key); return; }
     if (i < idx)  newOpen.add(key);
-    if (i > idx)  newOpen.add(`${jid}-${i - 1}`);
+    if (i > idx)  newOpen.add(`${pid}-${i - 1}`);
   });
   openDebriefs.clear();
   newOpen.forEach(k => openDebriefs.add(k));
   saveData(data);
-  renderJobList();
-  renderJobStats();
-  if (expandedJobId === jobId) {
-    const el = document.querySelector(`.job-card[data-id="${jobId}"]`);
-    if (el) {
-      el.classList.add('expanded');
-      openDebriefs.forEach(key => {
-        const el2 = document.getElementById(`db-${key}`);
-        if (el2) el2.classList.add('open');
-      });
+  renderJobList(); renderJobStats();
+  const coEl = document.querySelector(`.co-card[data-id="${coId}"]`);
+  if (coEl && expandedCoId === coId) {
+    coEl.classList.add('expanded');
+    const posEl = document.querySelector(`.pos-card[data-id="${posId}"]`);
+    if (posEl && expandedPosId === posId) {
+      posEl.classList.add('expanded');
+      openDebriefs.forEach(k => { const e = document.getElementById(`db-${k}`); if (e) e.classList.add('open'); });
     }
   }
 }
 
 /* ── Offer 对比表 ── */
 function renderOfferTable() {
-  const jobs    = (loadData().jobs || []).filter(j => j.status === '已Offer' && j.offer);
   const section = document.getElementById('job-offer-cmp');
   if (!section) return;
-  if (jobs.length < 2) { section.style.display = 'none'; return; }
+  const cos = loadData().companies || [];
+  const offerPositions = [];
+  cos.forEach(co => {
+    (co.positions || []).forEach(pos => {
+      if (pos.status === '已Offer' && pos.offer) offerPositions.push({ co, pos });
+    });
+  });
+  if (offerPositions.length < 2) { section.style.display = 'none'; return; }
 
-  const fields = [
-    { k: 'salary',        l: '薪资' },
-    { k: 'level',         l: '职级' },
-    { k: 'location',      l: '地点' },
-    { k: 'benefits',      l: '福利' },
-    { k: 'offerDeadline', l: 'Offer截止' },
-    { k: 'notes',         l: '备注' }
-  ];
-
-  const head = `<th></th>${jobs.map(j => `<th>${escHtml(j.company)}</th>`).join('')}`;
-  const rows = fields.map(f =>
-    `<tr><th>${f.l}</th>${jobs.map(j => `<td>${escHtml((j.offer || {})[f.k] || '—')}</td>`).join('')}</tr>`
+  const fields = [['salary','薪资'],['level','职级'],['location','地点'],['benefits','福利'],['offerDeadline','Offer截止'],['notes','备注']];
+  const head = `<th></th>${offerPositions.map(({co,pos}) => `<th>${escHtml(co.name)} · ${escHtml(pos.title)}</th>`).join('')}`;
+  const rows = fields.map(([k,l]) =>
+    `<tr><th>${l}</th>${offerPositions.map(({pos}) => `<td>${escHtml((pos.offer || {})[k] || '—')}</td>`).join('')}</tr>`
   ).join('');
 
   section.style.display = '';
-  section.innerHTML = `
-    <div class="job-offer-cmp-title">Offer 对比</div>
-    <table class="job-offer-table">
-      <thead><tr>${head}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  section.innerHTML = `<div class="job-offer-cmp-title">Offer 对比</div>
+    <table class="job-offer-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ── Excel 导入 ── */
+function handleExcelImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const COL  = { '公司':'company','招聘网址':'url','实际投递岗位':'title','城市':'city',
+                     '投递日期':'applyDate','状态':'status','截止日期':'deadline' };
+      const mapped = rows.map(row => {
+        const r = {};
+        Object.keys(row).forEach(k => { const ck = COL[k.trim()]; if (ck) r[ck] = String(row[k] || '').trim(); });
+        return r;
+      }).filter(r => r.company && r.title);
+
+      // Group by company
+      const coMap = {};
+      mapped.forEach(r => {
+        const n = r.company;
+        if (!coMap[n]) coMap[n] = { name: n, url: '', positions: [] };
+        if (r.url && !coMap[n].url) coMap[n].url = r.url;
+        coMap[n].positions.push({
+          title: r.title, city: r.city || '', applyDate: r.applyDate || '',
+          status: r.status || '待回复', deadline: r.deadline || null
+        });
+      });
+
+      pendingImport = Object.values(coMap);
+      if (!pendingImport.length) { alert('未找到有效数据，请确认列名是否正确'); return; }
+      showImportPreview();
+    } catch (err) {
+      alert('文件解析失败：' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showImportPreview() {
+  const data = loadData();
+  const existingCos = data.companies || [];
+  let totalPos = 0, dupCount = 0;
+  const rows = [];
+  pendingImport.forEach(co => {
+    co.positions.forEach(pos => {
+      totalPos++;
+      const existCo = existingCos.find(c => c.name === co.name);
+      const isDup   = existCo && existCo.positions.some(p => p.title === pos.title);
+      if (isDup) dupCount++;
+      rows.push({ co: co.name, title: pos.title, city: pos.city, isDup });
+    });
+  });
+
+  document.getElementById('import-summary').textContent =
+    `将导入 ${pendingImport.length} 家公司，共 ${totalPos} 个岗位（${dupCount} 条可能重复）`;
+  document.getElementById('import-preview-list').innerHTML = rows.map(r => `
+    <div class="import-preview-row">
+      <span class="import-preview-co">${escHtml(r.co)}</span>
+      <span class="import-preview-pos">${escHtml(r.title)}</span>
+      ${r.city ? `<span class="import-preview-city">${escHtml(r.city)}</span>` : ''}
+      ${r.isDup ? `<span class="import-preview-dup">可能重复</span>` : ''}
+    </div>`).join('');
+  document.getElementById('import-modal-overlay').classList.remove('hidden');
+}
+
+function closeImportModal() {
+  pendingImport = [];
+  document.getElementById('import-modal-overlay').classList.add('hidden');
+}
+
+function confirmImport() {
+  const data = loadData();
+  data.companies = data.companies || [];
+  let importedCo = 0, importedPos = 0, skipped = 0;
+
+  pendingImport.forEach(newCo => {
+    let existCo = data.companies.find(c => c.name === newCo.name);
+    if (!existCo) {
+      existCo = { id: Date.now() + Math.random(), name: newCo.name, url: newCo.url || '', notes: '', priority: '中', positions: [] };
+      data.companies.push(existCo);
+      importedCo++;
+    } else if (newCo.url && !existCo.url) {
+      existCo.url = newCo.url;
+    }
+    newCo.positions.forEach(pos => {
+      const isDup = existCo.positions.some(p => p.title === pos.title);
+      if (isDup) { skipped++; return; }
+      existCo.positions.push({ id: Date.now() + Math.random(), ...pos, interviews: [], offer: null, notes: '' });
+      importedPos++;
+    });
+  });
+
+  saveData(data);
+  closeImportModal();
+  renderJobView();
+  alert(`成功导入 ${importedCo} 家公司，${importedPos} 个岗位，跳过 ${skipped} 条重复`);
 }
 
 /* ── 今日待办 ── */
@@ -2517,18 +2441,20 @@ function renderJobTodos() {
 
 /* ── 截止提醒 ── */
 function renderDeadlineReminders() {
-  const jobs  = loadData().jobs || [];
+  const cos   = loadData().companies || [];
   const items = [];
 
-  jobs.forEach(job => {
-    if (job.deadline) {
-      const d = daysUntil(job.deadline);
-      if (d <= 7) items.push({ label: `${job.company} · 投递截止`, days: d });
-    }
-    if (job.offer && job.offer.offerDeadline) {
-      const d = daysUntil(job.offer.offerDeadline);
-      if (d <= 7) items.push({ label: `${job.company} · Offer截止`, days: d });
-    }
+  cos.forEach(co => {
+    (co.positions || []).forEach(pos => {
+      if (pos.deadline) {
+        const d = daysUntil(pos.deadline);
+        if (d <= 7) items.push({ label: `${co.name} · ${pos.title} 投递截止`, days: d });
+      }
+      if (pos.offer && pos.offer.offerDeadline) {
+        const d = daysUntil(pos.offer.offerDeadline);
+        if (d <= 7) items.push({ label: `${co.name} · ${pos.title} Offer截止`, days: d });
+      }
+    });
   });
 
   items.sort((a, b) => a.days - b.days);
