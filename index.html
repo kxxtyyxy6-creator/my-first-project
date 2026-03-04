@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>手账日程本</title>
+  <style>
+    /* ── 基础重置 ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #faf9f7;
+      --paper:     #ffffff;
+      --border:    #e2ddd6;
+      --border-light: #ede9e2;
+      --ink:       #3d3530;
+      --ink-light: #8a7f77;
+      --accent:    #c8a882;
+      --today-bg:  #f5f0e8;
+      --today-line:#c8a882;
+      --hover-bg:  #f7f5f1;
+      --sidebar-w: 220px;
+      --font-serif: "Hiragino Mincho ProN", "Noto Serif SC", Georgia, serif;
+      --font-sans:  "Hiragino Kaku Gothic ProN", "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* 纸纹背景（细微横线） */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 27px,
+        var(--border-light) 27px,
+        var(--border-light) 28px
+      );
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    /* ── 顶部导航 ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--paper);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      height: 56px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+
+    .logo {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      letter-spacing: .12em;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .logo span {
+      font-size: 11px;
+      color: var(--ink-light);
+      margin-left: 8px;
+      letter-spacing: .08em;
+    }
+
+    .tab-group {
+      display: flex;
+      gap: 2px;
+      margin-left: auto;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--ink-light);
+      padding: 5px 18px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      letter-spacing: .05em;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .tab-btn:first-child { border-radius: 3px 0 0 3px; }
+    .tab-btn:last-child  { border-radius: 0 3px 3px 0; }
+
+    .tab-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    /* ── 主体布局 ── */
+    main {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 56px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .view { display: none; }
+    .view.active { display: flex; flex: 1; }
+
+    /* ══════════════════════════════
+       月视图
+    ══════════════════════════════ */
+    #month-view {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+
+    /* 左：日历区域 */
+    .calendar-area {
+      flex: 1;
+      padding: 24px 28px;
+      min-width: 0;
+    }
+
+    .month-nav {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .month-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      letter-spacing: .06em;
+      color: var(--ink);
+    }
+
+    .month-title sub {
+      font-size: 13px;
+      color: var(--ink-light);
+      margin-left: 6px;
+      font-family: var(--font-sans);
+    }
+
+    .nav-btn {
+      border: 1px solid var(--border);
+      background: var(--paper);
+      color: var(--ink-light);
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 3px;
+      transition: background .12s, border-color .12s;
+    }
+
+    .nav-btn:hover { background: var(--hover-bg); border-color: var(--accent); }
+
+    .today-btn {
+      font-size: 11px;
+      padding: 4px 10px;
+      height: 28px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--ink-light);
+      cursor: pointer;
+      border-radius: 3px;
+      letter-spacing: .04em;
+      font-family: var(--font-sans);
+      transition: background .12s;
+    }
+    .today-btn:hover { background: var(--hover-bg); }
+
+    /* 日历表格 */
+    .cal-grid {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .cal-grid thead th {
+      text-align: center;
+      font-size: 11px;
+      font-weight: normal;
+      letter-spacing: .1em;
+      color: var(--ink-light);
+      padding: 6px 0 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cal-grid thead th:last-child { color: #c0876a; } /* 日 — 红色 */
+
+    .cal-grid tbody td {
+      width: calc(100% / 7);
+      height: 90px;
+      vertical-align: top;
+      border: 1px solid var(--border-light);
+      padding: 6px 8px;
+      cursor: pointer;
+      background: var(--paper);
+      transition: background .12s;
+      position: relative;
+    }
+
+    .cal-grid tbody td:hover { background: var(--hover-bg); }
+
+    .cal-grid tbody td.other-month {
+      background: var(--bg);
+      opacity: .45;
+      cursor: default;
+    }
+
+    .cal-grid tbody td.today {
+      background: var(--today-bg);
+      border-bottom: 2px solid var(--today-line);
+    }
+
+    .cal-grid tbody td.selected {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .day-num {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      line-height: 1;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .day-num.sunday { color: #c0876a; }
+
+    .day-note-preview {
+      font-size: 11px;
+      color: var(--ink-light);
+      line-height: 1.4;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      white-space: pre-line;
+    }
+
+    /* 右：待办侧栏 */
+    .todo-sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      padding: 24px 18px;
+      background: var(--paper);
+      min-height: calc(100vh - 56px);
+    }
+
+    .sidebar-title {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      letter-spacing: .12em;
+      color: var(--ink-light);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .todo-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .todo-input {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 5px 8px;
+      border-radius: 3px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .todo-input:focus { border-color: var(--accent); }
+
+    .todo-add-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--ink-light);
+      width: 28px;
+      flex-shrink: 0;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .12s, border-color .12s;
+    }
+    .todo-add-btn:hover { background: var(--hover-bg); border-color: var(--accent); }
+
+    .todo-list { list-style: none; }
+
+    .todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .todo-item input[type="checkbox"] {
+      margin-top: 2px;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .todo-item label {
+      flex: 1;
+      font-size: 13px;
+      cursor: pointer;
+      word-break: break-all;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .todo-item.done label {
+      text-decoration: line-through;
+      color: var(--ink-light);
+    }
+
+    .todo-del-btn {
+      border: none;
+      background: none;
+      color: var(--border);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+      flex-shrink: 0;
+      transition: color .12s;
+    }
+    .todo-del-btn:hover { color: #c0876a; }
+
+    /* 日备注侧面板（从右侧滑入） */
+    .note-panel {
+      position: fixed;
+      top: 56px;
+      right: var(--sidebar-w);
+      width: 0;
+      height: calc(100vh - 56px);
+      background: var(--paper);
+      border-left: 1px solid var(--border);
+      z-index: 50;
+      overflow: hidden;
+      transition: width .22s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .note-panel.open {
+      width: 280px;
+    }
+
+    .note-panel-inner {
+      width: 280px;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .note-panel-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .note-panel-date {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      letter-spacing: .06em;
+      flex: 1;
+    }
+
+    .note-close-btn {
+      border: none;
+      background: none;
+      color: var(--ink-light);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .note-close-btn:hover { color: var(--ink); }
+
+    .note-textarea {
+      flex: 1;
+      border: 1px solid var(--border-light);
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.8;
+      padding: 10px 12px;
+      resize: none;
+      outline: none;
+      border-radius: 3px;
+      transition: border-color .15s;
+    }
+    .note-textarea:focus { border-color: var(--accent); }
+
+    .note-save-hint {
+      font-size: 11px;
+      color: var(--ink-light);
+      margin-top: 8px;
+      letter-spacing: .04em;
+    }
+
+    /* ══════════════════════════════
+       周视图
+    ══════════════════════════════ */
+    #week-view {
+      flex-direction: column;
+    }
+
+    .week-layout {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* 周视图顶部导航 */
+    .week-nav {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--paper);
+    }
+
+    .week-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      letter-spacing: .05em;
+    }
+
+    .week-title sub {
+      font-size: 12px;
+      color: var(--ink-light);
+      margin-left: 6px;
+      font-family: var(--font-sans);
+    }
+
+    /* 七天列区域（左） */
+    .week-days-area {
+      flex: 1;
+      min-width: 0;
+      overflow: auto;
+      padding: 0;
+    }
+
+    .week-days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      height: 100%;
+      min-height: calc(100vh - 56px - 73px);
+      border-right: 1px solid var(--border);
+    }
+
+    .week-day-col {
+      border-right: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .week-day-col:last-child { border-right: none; }
+
+    .week-day-header {
+      padding: 12px 10px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--paper);
+      text-align: center;
+    }
+
+    .week-day-name {
+      font-size: 11px;
+      letter-spacing: .1em;
+      color: var(--ink-light);
+      display: block;
+    }
+
+    .week-day-num {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      line-height: 1.1;
+      display: block;
+    }
+
+    .week-day-col.today .week-day-header {
+      background: var(--today-bg);
+      border-bottom: 2px solid var(--today-line);
+    }
+
+    .week-day-col.sunday .week-day-name,
+    .week-day-col.sunday .week-day-num {
+      color: #c0876a;
+    }
+
+    .week-day-textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      resize: none;
+      padding: 10px 10px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      line-height: 27px; /* 与纸纹对齐 */
+      color: var(--ink);
+      width: 100%;
+    }
+
+    /* 周视图右侧：本周通用备注 */
+    .week-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      background: var(--paper);
+      display: flex;
+      flex-direction: column;
+      padding: 18px 16px;
+    }
+
+    .week-sidebar-title {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      letter-spacing: .1em;
+      color: var(--ink-light);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .week-note-textarea {
+      flex: 1;
+      border: 1px solid var(--border-light);
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.8;
+      padding: 10px 10px;
+      resize: none;
+      outline: none;
+      border-radius: 3px;
+      transition: border-color .15s;
+    }
+    .week-note-textarea:focus { border-color: var(--accent); }
+
+    .week-note-hint {
+      font-size: 11px;
+      color: var(--ink-light);
+      margin-top: 8px;
+    }
+
+    /* ── 通用工具 ── */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── 顶栏 ── -->
+<header>
+  <div class="logo">手账日程本 <span>PLANNER</span></div>
+  <div class="tab-group">
+    <button class="tab-btn active" id="btn-month" onclick="switchView('month')">月视图</button>
+    <button class="tab-btn"        id="btn-week"  onclick="switchView('week')">周视图</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ════ 月视图 ════ -->
+  <div id="month-view" class="view active">
+
+    <!-- 左：日历 -->
+    <div class="calendar-area">
+      <div class="month-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)" title="上个月">&#8249;</button>
+        <button class="nav-btn" onclick="changeMonth(1)"  title="下个月">&#8250;</button>
+        <h2 class="month-title" id="month-title"></h2>
+        <button class="today-btn" onclick="goToday()">今天</button>
+      </div>
+      <table class="cal-grid" id="cal-grid">
+        <thead>
+          <tr>
+            <th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th><th>日</th>
+          </tr>
+        </thead>
+        <tbody id="cal-body"></tbody>
+      </table>
+    </div>
+
+    <!-- 右：To Do 侧栏 -->
+    <aside class="todo-sidebar">
+      <div class="sidebar-title" id="todo-title">本月待办</div>
+      <div class="todo-input-row">
+        <input class="todo-input" id="todo-input" type="text"
+               placeholder="添加待办…" maxlength="80"
+               onkeydown="if(event.key==='Enter')addTodo()" />
+        <button class="todo-add-btn" onclick="addTodo()" title="添加">+</button>
+      </div>
+      <ul class="todo-list" id="todo-list"></ul>
+    </aside>
+
+    <!-- 日备注悬浮面板 -->
+    <div class="note-panel" id="note-panel">
+      <div class="note-panel-inner">
+        <div class="note-panel-header">
+          <span class="note-panel-date" id="note-panel-date"></span>
+          <button class="note-close-btn" onclick="closeNotePanel()" title="关闭">×</button>
+        </div>
+        <textarea class="note-textarea" id="note-textarea"
+                  placeholder="写下今天的安排…"
+                  oninput="saveNote()"></textarea>
+        <div class="note-save-hint">自动保存</div>
+      </div>
+    </div>
+
+  </div><!-- /month-view -->
+
+  <!-- ════ 周视图 ════ -->
+  <div id="week-view" class="view">
+
+    <!-- 周导航 -->
+    <div class="week-nav">
+      <button class="nav-btn" onclick="changeWeek(-1)" title="上一周">&#8249;</button>
+      <button class="nav-btn" onclick="changeWeek(1)"  title="下一周">&#8250;</button>
+      <h2 class="week-title" id="week-title"></h2>
+      <button class="today-btn" onclick="goToday()">今天</button>
+    </div>
+
+    <div class="week-layout">
+      <!-- 七天列 -->
+      <div class="week-days-area">
+        <div class="week-days-grid" id="week-days-grid"></div>
+      </div>
+
+      <!-- 右：本周通用备注 -->
+      <aside class="week-sidebar">
+        <div class="week-sidebar-title">本周备注</div>
+        <textarea class="week-note-textarea" id="week-note-textarea"
+                  placeholder="记录本周计划、反思或其他不限定某天的内容…"
+                  oninput="saveWeekNote()"></textarea>
+        <div class="week-note-hint">自动保存</div>
+      </aside>
+    </div>
+
+  </div><!-- /week-view -->
+
+</main>
+
+<script>
+/* ════════════════════════════════════════
+   数据层
+════════════════════════════════════════ */
+const DATA_KEY = 'techo_data';
+
+function loadData() {
+  try {
+    return JSON.parse(localStorage.getItem(DATA_KEY)) || { notes: {}, todos: {}, weekNotes: {} };
+  } catch {
+    return { notes: {}, todos: {}, weekNotes: {} };
+  }
+}
+
+function saveData(data) {
+  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+}
+
+/* ════════════════════════════════════════
+   状态
+════════════════════════════════════════ */
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+let curYear  = today.getFullYear();
+let curMonth = today.getMonth();   // 0-based
+let curWeekStart = getWeekStart(today);
+let selectedDate = null;           // Date 对象
+
+/* ════════════════════════════════════════
+   工具函数
+════════════════════════════════════════ */
+function fmtDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function fmtMonthKey(y, m) {
+  return `${y}-${String(m+1).padStart(2,'0')}`;
+}
+
+// 获取某日期所在周的周一 (Date)
+function getWeekStart(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  const day = date.getDay();          // 0=Sun
+  const diff = (day === 0) ? -6 : 1 - day; // 调整到周一
+  date.setDate(date.getDate() + diff);
+  return date;
+}
+
+// 返回周的唯一 key "YYYY-Www"
+function fmtWeekKey(weekStart) {
+  const d = new Date(weekStart);
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const weekNo = Math.ceil((((d - jan1) / 86400000) + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(weekNo).padStart(2,'0')}`;
+}
+
+const CN_WEEKDAYS = ['一','二','三','四','五','六','日'];
+const CN_MONTHS   = ['一月','二月','三月','四月','五月','六月',
+                     '七月','八月','九月','十月','十一月','十二月'];
+
+/* ════════════════════════════════════════
+   视图切换
+════════════════════════════════════════ */
+let curView = 'month';
+
+function switchView(v) {
+  curView = v;
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById(v + '-view').classList.add('active');
+  document.getElementById('btn-month').classList.toggle('active', v === 'month');
+  document.getElementById('btn-week').classList.toggle('active',  v === 'week');
+  if (v === 'month') renderMonth();
+  else               renderWeek();
+}
+
+/* ════════════════════════════════════════
+   月视图渲染
+════════════════════════════════════════ */
+function renderMonth() {
+  // 标题
+  document.getElementById('month-title').textContent =
+    `${curYear} 年 ${CN_MONTHS[curMonth]}`;
+  document.getElementById('todo-title').textContent =
+    `${curMonth+1} 月待办`;
+
+  const data = loadData();
+  const body = document.getElementById('cal-body');
+  body.innerHTML = '';
+
+  // 该月第一天（周一起始，0=Mon…6=Sun 映射）
+  const firstDay = new Date(curYear, curMonth, 1);
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = (startDow === 0) ? 6 : startDow - 1; // 转为 Mon=0
+
+  const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+  const totalCells  = Math.ceil((startDow + daysInMonth) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i += 7) {
+    const tr = document.createElement('tr');
+    for (let j = 0; j < 7; j++) {
+      const cellIdx = i + j;
+      const dayNum  = cellIdx - startDow + 1;
+      const td      = document.createElement('td');
+
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        td.classList.add('other-month');
+        // 显示前/后月日期（灰色）
+        if (dayNum < 1) {
+          const prevLast = new Date(curYear, curMonth, 0).getDate();
+          td.innerHTML = `<span class="day-num">${prevLast + dayNum}</span>`;
+        } else {
+          td.innerHTML = `<span class="day-num">${dayNum - daysInMonth}</span>`;
+        }
+      } else {
+        const d    = new Date(curYear, curMonth, dayNum);
+        const key  = fmtDateKey(d);
+        const note = data.notes[key] || '';
+        const isToday  = d.getTime() === today.getTime();
+        const isSunday = d.getDay() === 0;
+        const isSelected = selectedDate && selectedDate.getTime() === d.getTime();
+
+        if (isToday)    td.classList.add('today');
+        if (isSelected) td.classList.add('selected');
+
+        td.innerHTML = `
+          <span class="day-num${isSunday ? ' sunday' : ''}">${dayNum}</span>
+          <div class="day-note-preview">${escHtml(note)}</div>`;
+
+        td.addEventListener('click', () => openNotePanel(d));
+      }
+
+      tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+
+  renderTodos();
+}
+
+function changeMonth(delta) {
+  curMonth += delta;
+  if (curMonth > 11) { curMonth = 0;  curYear++; }
+  if (curMonth <  0) { curMonth = 11; curYear--; }
+  closeNotePanel();
+  renderMonth();
+}
+
+/* ════════════════════════════════════════
+   备注面板
+════════════════════════════════════════ */
+function openNotePanel(d) {
+  selectedDate = d;
+  const data = loadData();
+  const key  = fmtDateKey(d);
+
+  document.getElementById('note-panel-date').textContent =
+    `${d.getMonth()+1} 月 ${d.getDate()} 日`;
+  document.getElementById('note-textarea').value = data.notes[key] || '';
+  document.getElementById('note-panel').classList.add('open');
+
+  // 刷新选中状态
+  document.querySelectorAll('.cal-grid td').forEach(td => td.classList.remove('selected'));
+  // 找到对应 td
+  const tds = document.querySelectorAll('.cal-grid tbody td:not(.other-month)');
+  tds.forEach(td => {
+    const numEl = td.querySelector('.day-num');
+    if (numEl && parseInt(numEl.textContent) === d.getDate()) {
+      td.classList.add('selected');
+    }
+  });
+
+  document.getElementById('note-textarea').focus();
+}
+
+function closeNotePanel() {
+  selectedDate = null;
+  document.getElementById('note-panel').classList.remove('open');
+  document.querySelectorAll('.cal-grid td').forEach(td => td.classList.remove('selected'));
+}
+
+function saveNote() {
+  if (!selectedDate) return;
+  const data = loadData();
+  const key  = fmtDateKey(selectedDate);
+  const val  = document.getElementById('note-textarea').value;
+  if (val.trim()) {
+    data.notes[key] = val;
+  } else {
+    delete data.notes[key];
+  }
+  saveData(data);
+  // 刷新预览
+  const tds = document.querySelectorAll('.cal-grid tbody td:not(.other-month)');
+  tds.forEach(td => {
+    const numEl = td.querySelector('.day-num');
+    if (numEl && parseInt(numEl.textContent) === selectedDate.getDate()) {
+      const prev = td.querySelector('.day-note-preview');
+      if (prev) prev.textContent = val;
+    }
+  });
+}
+
+/* ════════════════════════════════════════
+   待办清单
+════════════════════════════════════════ */
+function addTodo() {
+  const input = document.getElementById('todo-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const data     = loadData();
+  const mkey     = fmtMonthKey(curYear, curMonth);
+  if (!data.todos[mkey]) data.todos[mkey] = [];
+  data.todos[mkey].push({ id: Date.now(), text, done: false });
+  saveData(data);
+  input.value = '';
+  renderTodos();
+}
+
+function toggleTodo(mkey, id) {
+  const data = loadData();
+  const item = (data.todos[mkey] || []).find(t => t.id === id);
+  if (item) item.done = !item.done;
+  saveData(data);
+  renderTodos();
+}
+
+function deleteTodo(mkey, id) {
+  const data = loadData();
+  if (data.todos[mkey]) {
+    data.todos[mkey] = data.todos[mkey].filter(t => t.id !== id);
+  }
+  saveData(data);
+  renderTodos();
+}
+
+function renderTodos() {
+  const data  = loadData();
+  const mkey  = fmtMonthKey(curYear, curMonth);
+  const items = data.todos[mkey] || [];
+  const ul    = document.getElementById('todo-list');
+  ul.innerHTML = '';
+
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'todo-item' + (item.done ? ' done' : '');
+    li.innerHTML = `
+      <input type="checkbox" id="t${item.id}" ${item.done ? 'checked' : ''}
+             onchange="toggleTodo('${mkey}', ${item.id})">
+      <label for="t${item.id}">${escHtml(item.text)}</label>
+      <button class="todo-del-btn" onclick="deleteTodo('${mkey}', ${item.id})" title="删除">×</button>`;
+    ul.appendChild(li);
+  });
+}
+
+/* ════════════════════════════════════════
+   周视图渲染
+════════════════════════════════════════ */
+function renderWeek() {
+  const ws = curWeekStart;
+  const we = new Date(ws); we.setDate(we.getDate() + 6);
+
+  // 标题
+  const fmtD = d => `${d.getMonth()+1}月${d.getDate()}日`;
+  document.getElementById('week-title').innerHTML =
+    `${ws.getFullYear()} 年 第 ${getISOWeek(ws)} 周
+     <sub>${fmtD(ws)} — ${fmtD(we)}</sub>`;
+
+  const data  = loadData();
+  const grid  = document.getElementById('week-days-grid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d   = new Date(ws); d.setDate(ws.getDate() + i);
+    const key = fmtDateKey(d);
+    const isToday  = d.getTime() === today.getTime();
+    const isSunday = d.getDay() === 0;
+
+    const col = document.createElement('div');
+    col.className = 'week-day-col' +
+                    (isToday  ? ' today'  : '') +
+                    (isSunday ? ' sunday' : '');
+
+    const dowName = CN_WEEKDAYS[i];
+
+    col.innerHTML = `
+      <div class="week-day-header">
+        <span class="week-day-name">周${dowName}</span>
+        <span class="week-day-num">${d.getDate()}</span>
+      </div>
+      <textarea class="week-day-textarea"
+                placeholder="今日安排…"
+                data-key="${key}"
+                oninput="saveDayNote(this)">${escHtml(data.notes[key] || '')}</textarea>`;
+
+    grid.appendChild(col);
+  }
+
+  // 周通用备注
+  const wkey = fmtWeekKey(ws);
+  document.getElementById('week-note-textarea').value = data.weekNotes[wkey] || '';
+  document.getElementById('week-note-textarea').dataset.key = wkey;
+}
+
+function saveDayNote(textarea) {
+  const data = loadData();
+  const key  = textarea.dataset.key;
+  const val  = textarea.value;
+  if (val.trim()) {
+    data.notes[key] = val;
+  } else {
+    delete data.notes[key];
+  }
+  saveData(data);
+}
+
+function saveWeekNote() {
+  const ta   = document.getElementById('week-note-textarea');
+  const data = loadData();
+  const key  = ta.dataset.key;
+  if (!key) return;
+  const val  = ta.value;
+  if (val.trim()) {
+    data.weekNotes[key] = val;
+  } else {
+    delete data.weekNotes[key];
+  }
+  saveData(data);
+}
+
+function changeWeek(delta) {
+  curWeekStart = new Date(curWeekStart);
+  curWeekStart.setDate(curWeekStart.getDate() + delta * 7);
+  renderWeek();
+}
+
+function getISOWeek(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  const jan4 = new Date(date.getFullYear(), 0, 4);
+  return 1 + Math.round(((date - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
+}
+
+/* ════════════════════════════════════════
+   通用导航
+════════════════════════════════════════ */
+function goToday() {
+  curYear      = today.getFullYear();
+  curMonth     = today.getMonth();
+  curWeekStart = getWeekStart(today);
+  closeNotePanel();
+  if (curView === 'month') renderMonth();
+  else                     renderWeek();
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+/* ── 初始化 ── */
+renderMonth();
+</script>
+</body>
+</html>
