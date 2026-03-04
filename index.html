@@ -734,6 +734,520 @@
       color: var(--ink-light);
       margin-top: 8px;
     }
+
+    /* ══════════════════════════════
+       求职追踪视图
+    ══════════════════════════════ */
+    #job-view { flex-direction: column; }
+
+    .job-stats-bar {
+      display: flex;
+      background: var(--paper);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .job-stat-item {
+      padding: 14px 22px;
+      border-right: 1px solid var(--border-light);
+      text-align: center;
+      min-width: 90px;
+    }
+
+    .job-stat-num {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      display: block;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .job-stat-label {
+      font-size: 11px;
+      color: var(--ink-light);
+      letter-spacing: .08em;
+      display: block;
+    }
+
+    .job-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .job-main-area {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .job-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .job-add-btn {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      padding: 6px 14px;
+      border-radius: 3px;
+      cursor: pointer;
+      letter-spacing: .04em;
+      transition: opacity .15s;
+    }
+    .job-add-btn:hover { opacity: .85; }
+
+    .job-filter-select {
+      border: 1px solid var(--border);
+      background: var(--paper);
+      color: var(--ink-light);
+      font-size: 12px;
+      font-family: var(--font-sans);
+      padding: 5px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .12s;
+    }
+    .job-filter-select:focus { border-color: var(--accent); }
+
+    .job-card {
+      background: var(--paper);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--border);
+      border-radius: 3px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+    .job-card:hover { border-color: var(--border); }
+    .job-card[data-status="面试中"]  { border-left-color: var(--accent); }
+    .job-card[data-status="已Offer"] { border-left-color: #7aab7a; }
+    .job-card[data-status="已拒绝"]  { border-left-color: #c0876a; opacity: .75; }
+
+    .job-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .job-card-header:hover { background: var(--hover-bg); }
+
+    .job-co-name {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+
+    .job-pos-name {
+      font-size: 12px;
+      color: var(--ink-light);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .job-sbadge {
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      color: var(--ink-light);
+      flex-shrink: 0;
+      letter-spacing: .04em;
+    }
+    .job-sbadge.s-interviewing { border-color: var(--accent); color: var(--accent); }
+    .job-sbadge.s-offer        { border-color: #7aab7a; color: #7aab7a; }
+    .job-sbadge.s-rejected     { border-color: #c0876a; color: #c0876a; }
+
+    .job-deadline-tag { font-size: 11px; color: var(--ink-light); flex-shrink: 0; }
+    .job-deadline-tag.urgent  { color: #c0876a; font-weight: 500; }
+    .job-deadline-tag.expired { color: #b96060; }
+
+    .job-card-meta {
+      padding: 0 14px 10px;
+      font-size: 11px;
+      color: var(--ink-light);
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .job-card-detail {
+      display: none;
+      border-top: 1px solid var(--border-light);
+      padding: 14px 14px 16px;
+    }
+    .job-card.expanded > .job-card-detail { display: block; }
+
+    .job-detail-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .job-status-select {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink-light);
+      font-size: 12px;
+      font-family: var(--font-sans);
+      padding: 3px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .job-sect-title {
+      font-family: var(--font-serif);
+      font-size: 12px;
+      letter-spacing: .1em;
+      color: var(--ink-light);
+      padding-top: 12px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 8px;
+    }
+
+    .job-int-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border-light);
+      flex-wrap: wrap;
+    }
+
+    .job-int-round {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      color: var(--accent);
+      min-width: 32px;
+      flex-shrink: 0;
+    }
+
+    .job-int-info { flex: 1; font-size: 12px; color: var(--ink); }
+
+    .job-int-actions { display: flex; gap: 8px; align-items: center; }
+
+    .job-debrief-btn {
+      font-size: 11px;
+      color: var(--ink-light);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      letter-spacing: .04em;
+      text-decoration: underline;
+    }
+    .job-debrief-btn:hover { color: var(--accent); }
+
+    .job-del-btn {
+      border: none;
+      background: none;
+      color: var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color .12s;
+    }
+    .job-del-btn:hover { color: #c0876a; }
+
+    .job-debrief {
+      margin-top: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+      padding: 10px 12px;
+      display: none;
+      width: 100%;
+    }
+    .job-debrief.open { display: block; }
+
+    .job-debrief-field { margin-bottom: 8px; }
+
+    .job-debrief-label {
+      font-size: 11px;
+      color: var(--ink-light);
+      letter-spacing: .06em;
+      margin-bottom: 3px;
+      display: block;
+    }
+
+    .job-debrief-ta {
+      width: 100%;
+      border: 1px solid var(--border-light);
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      line-height: 1.7;
+      padding: 6px 8px;
+      resize: vertical;
+      min-height: 48px;
+      outline: none;
+      border-radius: 3px;
+      transition: border-color .15s;
+    }
+    .job-debrief-ta:focus { border-color: var(--accent); }
+
+    .job-offer-info {
+      background: #fef8f0;
+      border: 1px solid #e8d8c0;
+      border-radius: 3px;
+      padding: 12px 14px;
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px 16px;
+    }
+
+    .job-offer-f  { display: flex; flex-direction: column; gap: 2px; }
+    .job-offer-fl { font-size: 10px; color: var(--ink-light); letter-spacing: .06em; }
+    .job-offer-fv { font-size: 13px; color: var(--ink); }
+
+    .job-notes-ta {
+      width: 100%;
+      border: 1px solid var(--border-light);
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      line-height: 1.7;
+      padding: 6px 8px;
+      resize: vertical;
+      min-height: 44px;
+      outline: none;
+      border-radius: 3px;
+      margin-top: 4px;
+      transition: border-color .15s;
+    }
+    .job-notes-ta:focus { border-color: var(--accent); }
+
+    .job-add-int-btn {
+      font-size: 12px;
+      color: var(--accent);
+      border: 1px dashed var(--accent);
+      background: transparent;
+      padding: 5px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      letter-spacing: .04em;
+      margin-top: 8px;
+      font-family: var(--font-sans);
+      transition: background .12s;
+    }
+    .job-add-int-btn:hover { background: var(--today-bg); }
+
+    .job-card-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .job-card-btn {
+      font-size: 11px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--ink-light);
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background .12s;
+    }
+    .job-card-btn:hover { background: var(--hover-bg); }
+    .job-card-btn.danger:hover { border-color: #c0876a; color: #c0876a; }
+
+    .job-offer-cmp {
+      margin-top: 20px;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .job-offer-cmp-title {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      letter-spacing: .1em;
+      color: var(--ink-light);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .job-offer-table { width: 100%; border-collapse: collapse; }
+
+    .job-offer-table th,
+    .job-offer-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--border-light);
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .job-offer-table th {
+      background: var(--bg);
+      font-weight: normal;
+      font-family: var(--font-serif);
+      color: var(--ink-light);
+      letter-spacing: .06em;
+      width: 80px;
+    }
+
+    .job-offer-table td { color: var(--ink); }
+
+    .job-sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      background: var(--paper);
+      padding: 20px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .job-deadline-item {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12px;
+      color: var(--ink-light);
+      line-height: 1.5;
+    }
+    .job-deadline-item.urgent  { color: #c0876a; }
+    .job-deadline-item.expired { color: #b96060; }
+
+    .job-deadline-days { font-size: 11px; letter-spacing: .03em; }
+
+    .job-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: rgba(250,249,247,.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+    .job-modal-overlay.hidden { display: none; }
+
+    .job-modal {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 26px 26px 22px;
+      width: 500px;
+      max-width: 94vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    }
+
+    .job-modal-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      letter-spacing: .08em;
+      margin-bottom: 18px;
+    }
+
+    .job-form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .job-form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .job-form-label {
+      font-size: 11px;
+      color: var(--ink-light);
+      letter-spacing: .06em;
+    }
+
+    .job-form-input,
+    .job-form-select {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 6px 8px;
+      border-radius: 3px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .job-form-input:focus,
+    .job-form-select:focus { border-color: var(--accent); }
+
+    .job-offer-sect-head {
+      font-family: var(--font-serif);
+      font-size: 12px;
+      letter-spacing: .1em;
+      color: var(--ink-light);
+      margin: 8px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .job-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .job-modal-cancel {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--ink-light);
+      font-size: 13px;
+      font-family: var(--font-sans);
+      padding: 6px 14px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .job-modal-cancel:hover { background: var(--hover-bg); }
+
+    .job-modal-save {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      padding: 6px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .job-modal-save:hover { opacity: .85; }
   </style>
 </head>
 <body>
@@ -770,6 +1284,7 @@
   <div class="tab-group">
     <button class="tab-btn active" id="btn-month" onclick="switchView('month')">月视图</button>
     <button class="tab-btn"        id="btn-week"  onclick="switchView('week')">周视图</button>
+    <button class="tab-btn"        id="btn-job"   onclick="switchView('job')">求职追踪</button>
   </div>
   <!-- Auth 区域 -->
   <div class="auth-area" id="auth-area">
@@ -849,9 +1364,181 @@
       </aside>
     </div>
 
-  </div>
+  </div><!-- /week-view -->
+
+  <!-- ════ 求职追踪视图 ════ -->
+  <div id="job-view" class="view">
+
+    <div class="job-stats-bar" id="job-stats-bar"></div>
+
+    <div class="job-body">
+      <div class="job-main-area">
+        <div class="job-toolbar">
+          <button class="job-add-btn" onclick="openJobModal(null)">+ 新增投递</button>
+          <select class="job-filter-select" id="job-filter-sel" onchange="renderJobList()">
+            <option value="">全部</option>
+            <option value="待回复">待回复</option>
+            <option value="面试中">面试中</option>
+            <option value="已拒绝">已拒绝</option>
+            <option value="已Offer">已Offer</option>
+          </select>
+          <select class="job-filter-select" id="job-sort-sel" onchange="renderJobList()">
+            <option value="newest">最新投递</option>
+            <option value="oldest">最早投递</option>
+            <option value="deadline">截止优先</option>
+          </select>
+        </div>
+        <div id="job-card-list"></div>
+        <div id="job-offer-cmp" class="job-offer-cmp" style="display:none;"></div>
+      </div>
+
+      <aside class="job-sidebar">
+        <div class="sidebar-title">今日求职待办</div>
+        <div class="todo-input-row">
+          <input class="todo-input" id="jtodo-input" type="text"
+                 placeholder="添加今日任务…" maxlength="80"
+                 onkeydown="if(event.key==='Enter')addJobTodo()" />
+          <button class="todo-add-btn" onclick="addJobTodo()" title="添加">+</button>
+        </div>
+        <ul class="todo-list" id="jtodo-list"></ul>
+        <div class="sidebar-title"
+             style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border-light);">
+          截止提醒
+        </div>
+        <div id="job-deadline-list"></div>
+      </aside>
+    </div>
+
+  </div><!-- /job-view -->
 
 </main>
+
+<!-- ── 新增/编辑投递 模态 ── -->
+<div class="job-modal-overlay hidden" id="job-modal-overlay"
+     onclick="if(event.target===this)closeJobModal()">
+  <div class="job-modal">
+    <div class="job-modal-title" id="jm-title">新增投递</div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">公司名称 *</label>
+        <input class="job-form-input" id="jf-company" placeholder="如：字节跳动" maxlength="50" />
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">应聘职位 *</label>
+        <input class="job-form-input" id="jf-position" placeholder="如：前端工程师" maxlength="60" />
+      </div>
+    </div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">投递日期</label>
+        <input class="job-form-input" id="jf-applydate" type="date" />
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">投递渠道</label>
+        <input class="job-form-input" id="jf-channel" placeholder="官网 / Boss / 内推…" maxlength="30" />
+      </div>
+    </div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">当前状态</label>
+        <select class="job-form-select" id="jf-status">
+          <option value="待回复">待回复</option>
+          <option value="面试中">面试中</option>
+          <option value="已拒绝">已拒绝</option>
+          <option value="已Offer">已Offer</option>
+        </select>
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">截止日期（可选）</label>
+        <input class="job-form-input" id="jf-deadline" type="date" />
+      </div>
+    </div>
+    <div id="jf-offer-section" style="display:none;">
+      <div class="job-offer-sect-head">Offer 详情</div>
+      <div class="job-form-row">
+        <div class="job-form-field">
+          <label class="job-form-label">薪资</label>
+          <input class="job-form-input" id="jf-salary" placeholder="如：30k×16" maxlength="40" />
+        </div>
+        <div class="job-form-field">
+          <label class="job-form-label">职级</label>
+          <input class="job-form-input" id="jf-level" placeholder="如：P6 / T2" maxlength="20" />
+        </div>
+      </div>
+      <div class="job-form-row">
+        <div class="job-form-field">
+          <label class="job-form-label">工作地点</label>
+          <input class="job-form-input" id="jf-location" placeholder="如：北京·朝阳" maxlength="40" />
+        </div>
+        <div class="job-form-field">
+          <label class="job-form-label">福利</label>
+          <input class="job-form-input" id="jf-benefits" placeholder="如：六险一金、餐补" maxlength="60" />
+        </div>
+      </div>
+      <div class="job-form-row">
+        <div class="job-form-field">
+          <label class="job-form-label">Offer 截止日期</label>
+          <input class="job-form-input" id="jf-offerdeadline" type="date" />
+        </div>
+        <div class="job-form-field">
+          <label class="job-form-label">备注</label>
+          <input class="job-form-input" id="jf-offernotes" placeholder="其他说明…" maxlength="80" />
+        </div>
+      </div>
+    </div>
+    <div class="job-modal-footer">
+      <button class="job-modal-cancel" onclick="closeJobModal()">取消</button>
+      <button class="job-modal-save"   onclick="saveJobModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 添加面试记录 模态 ── -->
+<div class="job-modal-overlay hidden" id="job-round-modal-overlay"
+     onclick="if(event.target===this)closeRoundModal()">
+  <div class="job-modal" style="width:400px;">
+    <div class="job-modal-title">添加面试记录</div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">面试轮次</label>
+        <input class="job-form-input" id="rf-round" placeholder="如：一面 / 二面 / HR面" maxlength="10" />
+      </div>
+    </div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">面试日期</label>
+        <input class="job-form-input" id="rf-date" type="date" />
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">时间</label>
+        <input class="job-form-input" id="rf-time" type="time" />
+      </div>
+    </div>
+    <div class="job-form-row">
+      <div class="job-form-field">
+        <label class="job-form-label">形式</label>
+        <select class="job-form-select" id="rf-format">
+          <option value="视频">视频</option>
+          <option value="现场">现场</option>
+          <option value="电话">电话</option>
+          <option value="笔试">笔试</option>
+        </select>
+      </div>
+      <div class="job-form-field">
+        <label class="job-form-label">结果</label>
+        <select class="job-form-select" id="rf-result">
+          <option value="">待定</option>
+          <option value="通过">通过</option>
+          <option value="未通过">未通过</option>
+        </select>
+      </div>
+    </div>
+    <div class="job-modal-footer">
+      <button class="job-modal-cancel" onclick="closeRoundModal()">取消</button>
+      <button class="job-modal-save"   onclick="saveRoundModal()">保存</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ════════════════════════════════════════
@@ -873,7 +1560,7 @@ const db   = firebase.firestore();
 /* ════════════════════════════════════════
    数据层（内存缓存 + 防抖云写入）
 ════════════════════════════════════════ */
-let appData     = { notes: {}, todos: {}, weekNotes: {} };
+let appData     = { notes: {}, todos: {}, weekNotes: {}, jobs: [], jobDailyTodos: {} };
 let currentUser = null;
 let saveTimer   = null;
 
@@ -894,12 +1581,14 @@ async function loadDataFromCloud() {
     const snap = await db.doc(`users/${currentUser.uid}/planner/data`).get();
     appData = snap.exists ? snap.data() : { notes: {}, todos: {}, weekNotes: {} };
     // 确保子对象存在
-    appData.notes     = appData.notes     || {};
-    appData.todos     = appData.todos     || {};
-    appData.weekNotes = appData.weekNotes || {};
+    appData.notes         = appData.notes         || {};
+    appData.todos         = appData.todos         || {};
+    appData.weekNotes     = appData.weekNotes     || {};
+    appData.jobs          = appData.jobs          || [];
+    appData.jobDailyTodos = appData.jobDailyTodos || {};
   } catch (e) {
     console.error('加载数据失败', e);
-    appData = { notes: {}, todos: {}, weekNotes: {} };
+    appData = { notes: {}, todos: {}, weekNotes: {}, jobs: [], jobDailyTodos: {} };
   }
 }
 
@@ -944,7 +1633,7 @@ auth.onAuthStateChanged(async user => {
     renderCurrentView();
     setSyncBadge('synced');
   } else {
-    appData = { notes: {}, todos: {}, weekNotes: {} };
+    appData = { notes: {}, todos: {}, weekNotes: {}, jobs: [], jobDailyTodos: {} };
     renderAuthArea(null);
     showLoginOverlay();
     showLoadingOverlay(false);
@@ -1068,12 +1757,14 @@ function switchView(v) {
   document.getElementById(v + '-view').classList.add('active');
   document.getElementById('btn-month').classList.toggle('active', v === 'month');
   document.getElementById('btn-week').classList.toggle('active',  v === 'week');
+  document.getElementById('btn-job').classList.toggle('active',   v === 'job');
   renderCurrentView();
 }
 
 function renderCurrentView() {
-  if (curView === 'month') renderMonth();
-  else                     renderWeek();
+  if      (curView === 'month') renderMonth();
+  else if (curView === 'week')  renderWeek();
+  else if (curView === 'job')   renderJobView();
 }
 
 /* ════════════════════════════════════════
@@ -1338,6 +2029,528 @@ function goToday() {
 
 /* ── 初始化（Auth 状态监听器会触发渲染） ── */
 renderAuthArea(null); // 先渲染未登录状态
+
+/* ════════════════════════════════════════
+   求职追踪 — 状态
+════════════════════════════════════════ */
+let editingJobId  = null;
+let addRoundJobId = null;
+let expandedJobId = null;
+const openDebriefs = new Set(); // "jobId-roundIdx"
+
+/* ── 工具 ── */
+function daysUntil(dateStr) {
+  if (!dateStr) return Infinity;
+  const t = new Date(dateStr + 'T00:00:00');
+  return Math.round((t - today) / 86400000);
+}
+
+/* ── 入口 ── */
+function renderJobView() {
+  renderJobStats();
+  renderJobList();
+  renderJobTodos();
+  renderDeadlineReminders();
+}
+
+/* ── 统计面板 ── */
+function renderJobStats() {
+  const jobs      = loadData().jobs || [];
+  const total     = jobs.length;
+  const replied   = jobs.filter(j => j.status !== '待回复').length;
+  const replyR    = total ? Math.round(replied / total * 100) : 0;
+  const intvCount = jobs.filter(j => j.status === '面试中').length;
+  const offerCnt  = jobs.filter(j => j.status === '已Offer').length;
+  const rejCnt    = jobs.filter(j => j.status === '已拒绝').length;
+  const passBase  = offerCnt + rejCnt;
+  const passR     = passBase ? Math.round(offerCnt / passBase * 100) : 0;
+
+  document.getElementById('job-stats-bar').innerHTML =
+    [['投递总数', total], ['回复率', replyR + '%'], ['进行中', intvCount],
+     ['Offer 数', offerCnt], ['面试通过率', passR + '%']]
+    .map(([l, n]) => `<div class="job-stat-item">
+      <span class="job-stat-num">${n}</span>
+      <span class="job-stat-label">${l}</span></div>`).join('');
+}
+
+/* ── 卡片列表 ── */
+function renderJobList() {
+  const data = loadData();
+  let jobs = (data.jobs || []).slice();
+
+  const fv = (document.getElementById('job-filter-sel') || {}).value || '';
+  const sv = (document.getElementById('job-sort-sel')   || {}).value || 'newest';
+
+  if (fv) jobs = jobs.filter(j => j.status === fv);
+  if (sv === 'newest')   jobs.sort((a, b) => b.id - a.id);
+  else if (sv === 'oldest')   jobs.sort((a, b) => a.id - b.id);
+  else if (sv === 'deadline') jobs.sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline));
+
+  const container = document.getElementById('job-card-list');
+  if (!jobs.length) {
+    container.innerHTML = `<div style="text-align:center;padding:52px 0;color:var(--ink-light);font-size:13px;line-height:2.2">
+      暂无投递记录<br><span style="font-size:11px">点击上方「+ 新增投递」开始记录求职进度</span></div>`;
+  } else {
+    container.innerHTML = jobs.map(buildJobCardHTML).join('');
+    if (expandedJobId) {
+      const el = container.querySelector(`.job-card[data-id="${expandedJobId}"]`);
+      if (el) el.classList.add('expanded');
+    }
+    openDebriefs.forEach(key => {
+      const el = document.getElementById(`db-${key}`);
+      if (el) el.classList.add('open');
+    });
+  }
+  renderOfferTable();
+}
+
+function buildJobCardHTML(job) {
+  const days = daysUntil(job.deadline);
+  let dlTag = '';
+  if (job.deadline) {
+    if      (days < 0)    dlTag = `<span class="job-deadline-tag expired">截止已过</span>`;
+    else if (days === 0)  dlTag = `<span class="job-deadline-tag urgent">⚡ 今天截止</span>`;
+    else if (days <= 3)   dlTag = `<span class="job-deadline-tag urgent">⚡ ${days}天后截止</span>`;
+    else                  dlTag = `<span class="job-deadline-tag">截止 ${job.deadline}</span>`;
+  }
+
+  const bCls = {'面试中':'s-interviewing','已Offer':'s-offer','已拒绝':'s-rejected'}[job.status] || '';
+
+  const meta = [];
+  if (job.applyDate) meta.push(`投递：${job.applyDate}`);
+  if (job.channel)   meta.push(`渠道：${escHtml(job.channel)}`);
+  const lastInt = (job.interviews || []).slice(-1)[0];
+  if (lastInt) meta.push(`${escHtml(lastInt.round)} · ${lastInt.date}${lastInt.time ? ' ' + lastInt.time : ''} · ${lastInt.format}`);
+
+  const intRows = (job.interviews || []).map((iv, idx) => {
+    const rStyle = iv.result === '通过'   ? 'color:#7aab7a' :
+                   iv.result === '未通过' ? 'color:#c0876a' : 'color:var(--ink-light)';
+    return `
+      <div class="job-int-row">
+        <span class="job-int-round">${escHtml(iv.round)}</span>
+        <div class="job-int-info">${escHtml(iv.date)}${iv.time ? ' ' + escHtml(iv.time) : ''} · ${escHtml(iv.format)}${iv.result ? `<span style="font-size:11px;margin-left:6px;${rStyle}">${escHtml(iv.result)}</span>` : ''}</div>
+        <div class="job-int-actions">
+          <button class="job-debrief-btn" onclick="toggleDebrief(${job.id},${idx})">复盘</button>
+          <button class="job-del-btn" onclick="deleteInterview(${job.id},${idx})" title="删除">×</button>
+        </div>
+      </div>
+      <div class="job-debrief" id="db-${job.id}-${idx}">
+        <div class="job-debrief-field">
+          <label class="job-debrief-label">被问到的问题</label>
+          <textarea class="job-debrief-ta" data-jid="${job.id}" data-idx="${idx}" data-field="questions"
+                    oninput="saveDebrief(this)" placeholder="记录面试中遇到的问题…">${escHtml(iv.questions || '')}</textarea>
+        </div>
+        <div class="job-debrief-field">
+          <label class="job-debrief-label">我的回答</label>
+          <textarea class="job-debrief-ta" data-jid="${job.id}" data-idx="${idx}" data-field="myAnswers"
+                    oninput="saveDebrief(this)" placeholder="自己的回答思路…">${escHtml(iv.myAnswers || '')}</textarea>
+        </div>
+        <div class="job-debrief-field" style="margin-bottom:0">
+          <label class="job-debrief-label">待改进</label>
+          <textarea class="job-debrief-ta" data-jid="${job.id}" data-idx="${idx}" data-field="improvements"
+                    oninput="saveDebrief(this)" placeholder="哪里回答得不好，下次如何改进…">${escHtml(iv.improvements || '')}</textarea>
+        </div>
+      </div>`;
+  }).join('');
+
+  const offerHtml = (job.status === '已Offer' && job.offer) ? `
+    <div class="job-sect-title">Offer 详情</div>
+    <div class="job-offer-info">
+      ${[['薪资', job.offer.salary], ['职级', job.offer.level], ['地点', job.offer.location],
+         ['福利', job.offer.benefits], ['Offer截止', job.offer.offerDeadline], ['备注', job.offer.notes]]
+        .filter(([, v]) => v)
+        .map(([l, v]) => `<div class="job-offer-f"><span class="job-offer-fl">${l}</span><span class="job-offer-fv">${escHtml(v)}</span></div>`)
+        .join('')}
+    </div>` : '';
+
+  return `
+    <div class="job-card" data-id="${job.id}" data-status="${escHtml(job.status)}">
+      <div class="job-card-header" onclick="toggleJobCard(${job.id})">
+        <span class="job-co-name">${escHtml(job.company || '（未填写）')}</span>
+        <span class="job-pos-name">${escHtml(job.position || '')}</span>
+        <span class="job-sbadge ${bCls}">${escHtml(job.status)}</span>
+        ${dlTag}
+      </div>
+      ${meta.length ? `<div class="job-card-meta">${meta.map(p => `<span>${p}</span>`).join('')}</div>` : ''}
+      <div class="job-card-detail">
+        <div class="job-detail-head">
+          <span style="font-size:11px;color:var(--ink-light);">状态</span>
+          <select class="job-status-select" onchange="updateJobStatus(${job.id}, this.value)">
+            <option value="待回复"  ${job.status === '待回复'  ? 'selected' : ''}>待回复</option>
+            <option value="面试中"  ${job.status === '面试中'  ? 'selected' : ''}>面试中</option>
+            <option value="已拒绝"  ${job.status === '已拒绝'  ? 'selected' : ''}>已拒绝</option>
+            <option value="已Offer" ${job.status === '已Offer' ? 'selected' : ''}>已Offer</option>
+          </select>
+        </div>
+        ${job.interviews && job.interviews.length
+          ? `<div class="job-sect-title">面试记录</div>${intRows}` : ''}
+        <button class="job-add-int-btn" onclick="openRoundModal(${job.id})">+ 添加面试记录</button>
+        ${offerHtml}
+        <div class="job-sect-title" style="margin-top:10px;">备注</div>
+        <textarea class="job-notes-ta" data-jid="${job.id}" data-field="notes"
+                  oninput="saveJobNotes(this)"
+                  placeholder="记录这个职位的其他信息…">${escHtml(job.notes || '')}</textarea>
+        <div class="job-card-btns">
+          <button class="job-card-btn" onclick="openJobModal(${job.id})">编辑</button>
+          <button class="job-card-btn danger" onclick="deleteJob(${job.id})">删除</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleJobCard(jobId) {
+  const el = document.querySelector(`.job-card[data-id="${jobId}"]`);
+  if (!el) return;
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.job-card.expanded').forEach(c => c.classList.remove('expanded'));
+  expandedJobId = null;
+  if (!wasExpanded) {
+    el.classList.add('expanded');
+    expandedJobId = jobId;
+  }
+}
+
+/* ── 复盘（不触发列表重渲染，直接更新 appData） ── */
+function toggleDebrief(jobId, idx) {
+  const key = `${jobId}-${idx}`;
+  const el  = document.getElementById(`db-${key}`);
+  if (!el) return;
+  if (el.classList.contains('open')) {
+    el.classList.remove('open');
+    openDebriefs.delete(key);
+  } else {
+    el.classList.add('open');
+    openDebriefs.add(key);
+  }
+}
+
+function saveDebrief(textarea) {
+  const data  = loadData();
+  const jobId = Number(textarea.dataset.jid);
+  const idx   = Number(textarea.dataset.idx);
+  const field = textarea.dataset.field;
+  const job   = (data.jobs || []).find(j => j.id === jobId);
+  if (!job || !job.interviews[idx]) return;
+  job.interviews[idx][field] = textarea.value;
+  saveData(data);
+}
+
+function saveJobNotes(textarea) {
+  const data  = loadData();
+  const jobId = Number(textarea.dataset.jid);
+  const job   = (data.jobs || []).find(j => j.id === jobId);
+  if (!job) return;
+  job.notes = textarea.value;
+  saveData(data);
+}
+
+/* ── 新增/编辑 模态 ── */
+function openJobModal(jobId) {
+  editingJobId = jobId;
+  const data = loadData();
+  const job  = jobId ? (data.jobs || []).find(j => j.id === jobId) : null;
+
+  document.getElementById('jm-title').textContent       = job ? '编辑投递' : '新增投递';
+  document.getElementById('jf-company').value           = job ? (job.company   || '') : '';
+  document.getElementById('jf-position').value          = job ? (job.position  || '') : '';
+  document.getElementById('jf-applydate').value         = job ? (job.applyDate || '') : fmtDateKey(today);
+  document.getElementById('jf-channel').value           = job ? (job.channel   || '') : '';
+  document.getElementById('jf-status').value            = job ? (job.status    || '待回复') : '待回复';
+  document.getElementById('jf-deadline').value          = job ? (job.deadline  || '') : '';
+
+  const offer = job && job.offer ? job.offer : {};
+  document.getElementById('jf-salary').value       = offer.salary       || '';
+  document.getElementById('jf-level').value        = offer.level        || '';
+  document.getElementById('jf-location').value     = offer.location     || '';
+  document.getElementById('jf-benefits').value     = offer.benefits     || '';
+  document.getElementById('jf-offerdeadline').value = offer.offerDeadline || '';
+  document.getElementById('jf-offernotes').value   = offer.notes        || '';
+
+  const toggleOffer = () => {
+    const show = document.getElementById('jf-status').value === '已Offer';
+    document.getElementById('jf-offer-section').style.display = show ? '' : 'none';
+  };
+  toggleOffer();
+  document.getElementById('jf-status').onchange = toggleOffer;
+
+  document.getElementById('job-modal-overlay').classList.remove('hidden');
+  document.getElementById('jf-company').focus();
+}
+
+function closeJobModal() {
+  editingJobId = null;
+  document.getElementById('job-modal-overlay').classList.add('hidden');
+}
+
+function saveJobModal() {
+  const company  = document.getElementById('jf-company').value.trim();
+  const position = document.getElementById('jf-position').value.trim();
+  if (!company || !position) { alert('请填写公司名称和应聘职位'); return; }
+
+  const status = document.getElementById('jf-status').value;
+  const offer  = status === '已Offer' ? {
+    salary:        document.getElementById('jf-salary').value.trim(),
+    level:         document.getElementById('jf-level').value.trim(),
+    location:      document.getElementById('jf-location').value.trim(),
+    benefits:      document.getElementById('jf-benefits').value.trim(),
+    offerDeadline: document.getElementById('jf-offerdeadline').value,
+    notes:         document.getElementById('jf-offernotes').value.trim()
+  } : null;
+
+  const data = loadData();
+  data.jobs = data.jobs || [];
+
+  if (editingJobId) {
+    const job = data.jobs.find(j => j.id === editingJobId);
+    if (job) {
+      job.company   = company;
+      job.position  = position;
+      job.applyDate = document.getElementById('jf-applydate').value;
+      job.channel   = document.getElementById('jf-channel').value.trim();
+      job.status    = status;
+      job.deadline  = document.getElementById('jf-deadline').value || null;
+      job.offer     = offer;
+    }
+  } else {
+    data.jobs.push({
+      id: Date.now(), company, position,
+      applyDate:  document.getElementById('jf-applydate').value,
+      channel:    document.getElementById('jf-channel').value.trim(),
+      status, deadline: document.getElementById('jf-deadline').value || null,
+      interviews: [], offer, notes: ''
+    });
+  }
+
+  saveData(data);
+  closeJobModal();
+  renderJobView();
+}
+
+function deleteJob(jobId) {
+  if (!confirm('确定删除这条投递记录？此操作不可恢复。')) return;
+  const data = loadData();
+  data.jobs  = (data.jobs || []).filter(j => j.id !== jobId);
+  if (expandedJobId === jobId) expandedJobId = null;
+  saveData(data);
+  renderJobView();
+}
+
+function updateJobStatus(jobId, newStatus) {
+  const data = loadData();
+  const job  = (data.jobs || []).find(j => j.id === jobId);
+  if (!job) return;
+  job.status = newStatus;
+  if (newStatus === '已Offer' && !job.offer) {
+    job.offer = { salary: '', level: '', location: '', benefits: '', offerDeadline: '', notes: '' };
+  }
+  saveData(data);
+  const savedExpanded = expandedJobId;
+  renderJobView();
+  expandedJobId = savedExpanded;
+  const el = document.querySelector(`.job-card[data-id="${savedExpanded}"]`);
+  if (el) {
+    el.classList.add('expanded');
+    openDebriefs.forEach(key => {
+      const el2 = document.getElementById(`db-${key}`);
+      if (el2) el2.classList.add('open');
+    });
+  }
+}
+
+/* ── 面试轮次 模态 ── */
+function openRoundModal(jobId) {
+  addRoundJobId = jobId;
+  document.getElementById('rf-round').value  = '';
+  document.getElementById('rf-date').value   = fmtDateKey(today);
+  document.getElementById('rf-time').value   = '';
+  document.getElementById('rf-format').value = '视频';
+  document.getElementById('rf-result').value = '';
+  document.getElementById('job-round-modal-overlay').classList.remove('hidden');
+  document.getElementById('rf-round').focus();
+}
+
+function closeRoundModal() {
+  addRoundJobId = null;
+  document.getElementById('job-round-modal-overlay').classList.add('hidden');
+}
+
+function saveRoundModal() {
+  const round = document.getElementById('rf-round').value.trim();
+  if (!round) { alert('请填写面试轮次'); return; }
+
+  const data = loadData();
+  const job  = (data.jobs || []).find(j => j.id === addRoundJobId);
+  if (!job) { closeRoundModal(); return; }
+
+  job.interviews = job.interviews || [];
+  job.interviews.push({
+    round,
+    date:         document.getElementById('rf-date').value,
+    time:         document.getElementById('rf-time').value,
+    format:       document.getElementById('rf-format').value,
+    result:       document.getElementById('rf-result').value,
+    questions: '', myAnswers: '', improvements: ''
+  });
+
+  if (job.status === '待回复') job.status = '面试中';
+
+  saveData(data);
+  const savedId = addRoundJobId;
+  closeRoundModal();
+  renderJobView();
+  // Restore expanded state
+  expandedJobId = savedId;
+  const el = document.querySelector(`.job-card[data-id="${savedId}"]`);
+  if (el) el.classList.add('expanded');
+}
+
+function deleteInterview(jobId, idx) {
+  const data = loadData();
+  const job  = (data.jobs || []).find(j => j.id === jobId);
+  if (!job) return;
+  job.interviews.splice(idx, 1);
+  // Re-key openDebriefs for this job (indices shift)
+  const newOpen = new Set();
+  openDebriefs.forEach(key => {
+    const [jid, i] = key.split('-').map(Number);
+    if (jid !== jobId) { newOpen.add(key); return; }
+    if (i < idx)  newOpen.add(key);
+    if (i > idx)  newOpen.add(`${jid}-${i - 1}`);
+  });
+  openDebriefs.clear();
+  newOpen.forEach(k => openDebriefs.add(k));
+  saveData(data);
+  renderJobList();
+  renderJobStats();
+  if (expandedJobId === jobId) {
+    const el = document.querySelector(`.job-card[data-id="${jobId}"]`);
+    if (el) {
+      el.classList.add('expanded');
+      openDebriefs.forEach(key => {
+        const el2 = document.getElementById(`db-${key}`);
+        if (el2) el2.classList.add('open');
+      });
+    }
+  }
+}
+
+/* ── Offer 对比表 ── */
+function renderOfferTable() {
+  const jobs    = (loadData().jobs || []).filter(j => j.status === '已Offer' && j.offer);
+  const section = document.getElementById('job-offer-cmp');
+  if (!section) return;
+  if (jobs.length < 2) { section.style.display = 'none'; return; }
+
+  const fields = [
+    { k: 'salary',        l: '薪资' },
+    { k: 'level',         l: '职级' },
+    { k: 'location',      l: '地点' },
+    { k: 'benefits',      l: '福利' },
+    { k: 'offerDeadline', l: 'Offer截止' },
+    { k: 'notes',         l: '备注' }
+  ];
+
+  const head = `<th></th>${jobs.map(j => `<th>${escHtml(j.company)}</th>`).join('')}`;
+  const rows = fields.map(f =>
+    `<tr><th>${f.l}</th>${jobs.map(j => `<td>${escHtml((j.offer || {})[f.k] || '—')}</td>`).join('')}</tr>`
+  ).join('');
+
+  section.style.display = '';
+  section.innerHTML = `
+    <div class="job-offer-cmp-title">Offer 对比</div>
+    <table class="job-offer-table">
+      <thead><tr>${head}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/* ── 今日待办 ── */
+function addJobTodo() {
+  const input = document.getElementById('jtodo-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  const data = loadData();
+  const key  = fmtDateKey(today);
+  data.jobDailyTodos = data.jobDailyTodos || {};
+  if (!data.jobDailyTodos[key]) data.jobDailyTodos[key] = [];
+  data.jobDailyTodos[key].push({ id: Date.now(), text, done: false });
+  saveData(data);
+  input.value = '';
+  renderJobTodos();
+}
+
+function toggleJobTodo(key, id) {
+  const data = loadData();
+  const item = ((data.jobDailyTodos || {})[key] || []).find(t => t.id === id);
+  if (item) item.done = !item.done;
+  saveData(data);
+  renderJobTodos();
+}
+
+function deleteJobTodo(key, id) {
+  const data = loadData();
+  if (data.jobDailyTodos && data.jobDailyTodos[key]) {
+    data.jobDailyTodos[key] = data.jobDailyTodos[key].filter(t => t.id !== id);
+  }
+  saveData(data);
+  renderJobTodos();
+}
+
+function renderJobTodos() {
+  const data  = loadData();
+  const key   = fmtDateKey(today);
+  const items = (data.jobDailyTodos || {})[key] || [];
+  const ul    = document.getElementById('jtodo-list');
+  if (!ul) return;
+  ul.innerHTML = '';
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'todo-item' + (item.done ? ' done' : '');
+    li.innerHTML = `
+      <input type="checkbox" id="jt${item.id}" ${item.done ? 'checked' : ''}
+             onchange="toggleJobTodo('${key}', ${item.id})">
+      <label for="jt${item.id}">${escHtml(item.text)}</label>
+      <button class="todo-del-btn" onclick="deleteJobTodo('${key}', ${item.id})" title="删除">×</button>`;
+    ul.appendChild(li);
+  });
+}
+
+/* ── 截止提醒 ── */
+function renderDeadlineReminders() {
+  const jobs  = loadData().jobs || [];
+  const items = [];
+
+  jobs.forEach(job => {
+    if (job.deadline) {
+      const d = daysUntil(job.deadline);
+      if (d <= 7) items.push({ label: `${job.company} · 投递截止`, days: d });
+    }
+    if (job.offer && job.offer.offerDeadline) {
+      const d = daysUntil(job.offer.offerDeadline);
+      if (d <= 7) items.push({ label: `${job.company} · Offer截止`, days: d });
+    }
+  });
+
+  items.sort((a, b) => a.days - b.days);
+
+  const container = document.getElementById('job-deadline-list');
+  if (!container) return;
+  if (!items.length) {
+    container.innerHTML = `<div style="font-size:12px;color:var(--ink-light);padding:8px 0;">暂无临近截止日期</div>`;
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    const cls     = item.days < 0 ? 'expired' : item.days <= 3 ? 'urgent' : '';
+    const dayText = item.days < 0 ? '已过期'
+                  : item.days === 0 ? '今天截止'
+                  : `还剩 ${item.days} 天`;
+    return `<div class="job-deadline-item ${cls}">
+      <div>${escHtml(item.label)}</div>
+      <div class="job-deadline-days">${dayText}</div>
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
