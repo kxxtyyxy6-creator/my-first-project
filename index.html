@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>手账日程本</title>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <style>
     /* ── 基础重置 ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +39,7 @@
       line-height: 1.6;
     }
 
-    /* 纸纹背景（细微横线） */
+    /* 纸纹背景 */
     body::before {
       content: "";
       position: fixed;
@@ -59,7 +65,7 @@
       padding: 0 28px;
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
       height: 56px;
       box-shadow: 0 1px 4px rgba(0,0,0,.05);
     }
@@ -82,7 +88,6 @@
     .tab-group {
       display: flex;
       gap: 2px;
-      margin-left: auto;
     }
 
     .tab-btn {
@@ -106,6 +111,177 @@
       border-color: var(--ink);
     }
 
+    /* ── Auth 区域（header 最右） ── */
+    .auth-area {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* 同步状态徽章 */
+    .sync-badge {
+      font-size: 11px;
+      color: var(--ink-light);
+      letter-spacing: .04em;
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+
+    .sync-badge.syncing { color: var(--accent); }
+    .sync-badge.synced  { color: #7aab7a; }
+
+    /* 用户头像 */
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .user-name {
+      font-size: 12px;
+      color: var(--ink-light);
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .auth-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--ink-light);
+      font-size: 12px;
+      font-family: var(--font-sans);
+      padding: 5px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      transition: background .12s, border-color .12s, color .12s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .auth-btn:hover { background: var(--hover-bg); border-color: var(--accent); }
+
+    .auth-btn.signin {
+      border-color: #d9d4cc;
+      background: #fff;
+    }
+
+    .auth-btn.signin:hover {
+      border-color: var(--accent);
+      background: var(--hover-bg);
+    }
+
+    /* Google 图标（SVG inline） */
+    .g-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ── 登录遮罩 ── */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(250,249,247,.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .login-overlay.hidden { display: none; }
+
+    .login-card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 40px 36px 36px;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      max-width: 320px;
+      width: 90%;
+    }
+
+    .login-card-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      letter-spacing: .1em;
+      margin-bottom: 8px;
+    }
+
+    .login-card-sub {
+      font-size: 12px;
+      color: var(--ink-light);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    .login-google-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      font-size: 13px;
+      font-family: var(--font-sans);
+      padding: 10px 24px;
+      border-radius: 3px;
+      cursor: pointer;
+      letter-spacing: .04em;
+      transition: background .12s, border-color .12s, box-shadow .12s;
+    }
+
+    .login-google-btn:hover {
+      background: var(--hover-bg);
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    .login-google-btn .g-icon-lg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* 加载状态 */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: rgba(250,249,247,.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--ink-light);
+      letter-spacing: .06em;
+    }
+
+    .loading-overlay.hidden { display: none; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* ── 主体布局 ── */
     main {
       position: relative;
@@ -126,7 +302,6 @@
       align-items: flex-start;
     }
 
-    /* 左：日历区域 */
     .calendar-area {
       flex: 1;
       padding: 24px 28px;
@@ -145,13 +320,6 @@
       font-size: 26px;
       letter-spacing: .06em;
       color: var(--ink);
-    }
-
-    .month-title sub {
-      font-size: 13px;
-      color: var(--ink-light);
-      margin-left: 6px;
-      font-family: var(--font-sans);
     }
 
     .nav-btn {
@@ -186,7 +354,6 @@
     }
     .today-btn:hover { background: var(--hover-bg); }
 
-    /* 日历表格 */
     .cal-grid {
       width: 100%;
       border-collapse: collapse;
@@ -202,7 +369,7 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .cal-grid thead th:last-child { color: #c0876a; } /* 日 — 红色 */
+    .cal-grid thead th:last-child { color: #c0876a; }
 
     .cal-grid tbody td {
       width: calc(100% / 7);
@@ -355,7 +522,7 @@
     }
     .todo-del-btn:hover { color: #c0876a; }
 
-    /* 日备注侧面板（从右侧滑入） */
+    /* 日备注面板 */
     .note-panel {
       position: fixed;
       top: 56px;
@@ -371,9 +538,7 @@
       flex-direction: column;
     }
 
-    .note-panel.open {
-      width: 280px;
-    }
+    .note-panel.open { width: 280px; }
 
     .note-panel-inner {
       width: 280px;
@@ -433,9 +598,7 @@
     /* ══════════════════════════════
        周视图
     ══════════════════════════════ */
-    #week-view {
-      flex-direction: column;
-    }
+    #week-view { flex-direction: column; }
 
     .week-layout {
       display: flex;
@@ -443,7 +606,6 @@
       min-height: 0;
     }
 
-    /* 周视图顶部导航 */
     .week-nav {
       display: flex;
       align-items: baseline;
@@ -466,12 +628,10 @@
       font-family: var(--font-sans);
     }
 
-    /* 七天列区域（左） */
     .week-days-area {
       flex: 1;
       min-width: 0;
       overflow: auto;
-      padding: 0;
     }
 
     .week-days-grid {
@@ -517,9 +677,7 @@
     }
 
     .week-day-col.sunday .week-day-name,
-    .week-day-col.sunday .week-day-num {
-      color: #c0876a;
-    }
+    .week-day-col.sunday .week-day-num { color: #c0876a; }
 
     .week-day-textarea {
       flex: 1;
@@ -530,12 +688,11 @@
       padding: 10px 10px;
       font-family: var(--font-sans);
       font-size: 12.5px;
-      line-height: 27px; /* 与纸纹对齐 */
+      line-height: 27px;
       color: var(--ink);
       width: 100%;
     }
 
-    /* 周视图右侧：本周通用备注 */
     .week-sidebar {
       width: 220px;
       flex-shrink: 0;
@@ -577,18 +734,35 @@
       color: var(--ink-light);
       margin-top: 8px;
     }
-
-    /* ── 通用工具 ── */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-    }
   </style>
 </head>
 <body>
+
+<!-- ── 登录遮罩 ── -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-card-title">手账日程本</div>
+    <div class="login-card-sub">
+      登录后，你的日程数据将同步到云端<br>在任何设备上都能随时访问
+    </div>
+    <button class="login-google-btn" onclick="signIn()">
+      <!-- Google G logo -->
+      <svg class="g-icon-lg" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      使用 Google 账号登录
+    </button>
+  </div>
+</div>
+
+<!-- ── 加载中遮罩 ── -->
+<div class="loading-overlay hidden" id="loading-overlay">
+  <div class="spinner"></div>
+  <span>正在加载数据…</span>
+</div>
 
 <!-- ── 顶栏 ── -->
 <header>
@@ -597,6 +771,10 @@
     <button class="tab-btn active" id="btn-month" onclick="switchView('month')">月视图</button>
     <button class="tab-btn"        id="btn-week"  onclick="switchView('week')">周视图</button>
   </div>
+  <!-- Auth 区域 -->
+  <div class="auth-area" id="auth-area">
+    <!-- 由 JS 渲染 -->
+  </div>
 </header>
 
 <main>
@@ -604,7 +782,6 @@
   <!-- ════ 月视图 ════ -->
   <div id="month-view" class="view active">
 
-    <!-- 左：日历 -->
     <div class="calendar-area">
       <div class="month-nav">
         <button class="nav-btn" onclick="changeMonth(-1)" title="上个月">&#8249;</button>
@@ -622,7 +799,6 @@
       </table>
     </div>
 
-    <!-- 右：To Do 侧栏 -->
     <aside class="todo-sidebar">
       <div class="sidebar-title" id="todo-title">本月待办</div>
       <div class="todo-input-row">
@@ -634,7 +810,6 @@
       <ul class="todo-list" id="todo-list"></ul>
     </aside>
 
-    <!-- 日备注悬浮面板 -->
     <div class="note-panel" id="note-panel">
       <div class="note-panel-inner">
         <div class="note-panel-header">
@@ -644,16 +819,15 @@
         <textarea class="note-textarea" id="note-textarea"
                   placeholder="写下今天的安排…"
                   oninput="saveNote()"></textarea>
-        <div class="note-save-hint">自动保存</div>
+        <div class="note-save-hint" id="note-save-hint">自动保存</div>
       </div>
     </div>
 
-  </div><!-- /month-view -->
+  </div>
 
   <!-- ════ 周视图 ════ -->
   <div id="week-view" class="view">
 
-    <!-- 周导航 -->
     <div class="week-nav">
       <button class="nav-btn" onclick="changeWeek(-1)" title="上一周">&#8249;</button>
       <button class="nav-btn" onclick="changeWeek(1)"  title="下一周">&#8250;</button>
@@ -662,12 +836,10 @@
     </div>
 
     <div class="week-layout">
-      <!-- 七天列 -->
       <div class="week-days-area">
         <div class="week-days-grid" id="week-days-grid"></div>
       </div>
 
-      <!-- 右：本周通用备注 -->
       <aside class="week-sidebar">
         <div class="week-sidebar-title">本周备注</div>
         <textarea class="week-note-textarea" id="week-note-textarea"
@@ -677,26 +849,155 @@
       </aside>
     </div>
 
-  </div><!-- /week-view -->
+  </div>
 
 </main>
 
 <script>
 /* ════════════════════════════════════════
-   数据层
+   Firebase 初始化
 ════════════════════════════════════════ */
-const DATA_KEY = 'techo_data';
+const firebaseConfig = {
+  apiKey: "AIzaSyCvcnJWQxJYHkpHRq2I1xvWKieJNXDJNG4",
+  authDomain: "agenda-cloud-data.firebaseapp.com",
+  projectId: "agenda-cloud-data",
+  storageBucket: "agenda-cloud-data.firebasestorage.app",
+  messagingSenderId: "527842566755",
+  appId: "1:527842566755:web:9401f61e28d207cd5a4e56"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* ════════════════════════════════════════
+   数据层（内存缓存 + 防抖云写入）
+════════════════════════════════════════ */
+let appData     = { notes: {}, todos: {}, weekNotes: {} };
+let currentUser = null;
+let saveTimer   = null;
 
 function loadData() {
-  try {
-    return JSON.parse(localStorage.getItem(DATA_KEY)) || { notes: {}, todos: {}, weekNotes: {} };
-  } catch {
-    return { notes: {}, todos: {}, weekNotes: {} };
-  }
+  return appData;
 }
 
 function saveData(data) {
-  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  appData = data;
+  if (!currentUser) return;
+  clearTimeout(saveTimer);
+  setSyncBadge('syncing');
+  saveTimer = setTimeout(() => writeToCloud(data), 1500);
+}
+
+async function loadDataFromCloud() {
+  try {
+    const snap = await db.doc(`users/${currentUser.uid}/planner/data`).get();
+    appData = snap.exists ? snap.data() : { notes: {}, todos: {}, weekNotes: {} };
+    // 确保子对象存在
+    appData.notes     = appData.notes     || {};
+    appData.todos     = appData.todos     || {};
+    appData.weekNotes = appData.weekNotes || {};
+  } catch (e) {
+    console.error('加载数据失败', e);
+    appData = { notes: {}, todos: {}, weekNotes: {} };
+  }
+}
+
+async function writeToCloud(data) {
+  if (!currentUser) return;
+  try {
+    await db.doc(`users/${currentUser.uid}/planner/data`).set(data);
+    setSyncBadge('synced');
+  } catch (e) {
+    console.error('保存数据失败', e);
+    setSyncBadge('error');
+  }
+}
+
+/* ════════════════════════════════════════
+   Auth
+════════════════════════════════════════ */
+function signIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    console.error('登录失败', err);
+  });
+}
+
+function signOut() {
+  // 清空防抖，立即写入未保存的数据
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    writeToCloud(appData);
+  }
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  if (user) {
+    showLoadingOverlay(true);
+    hideLoginOverlay();
+    await loadDataFromCloud();
+    showLoadingOverlay(false);
+    renderAuthArea(user);
+    renderCurrentView();
+    setSyncBadge('synced');
+  } else {
+    appData = { notes: {}, todos: {}, weekNotes: {} };
+    renderAuthArea(null);
+    showLoginOverlay();
+    showLoadingOverlay(false);
+  }
+});
+
+/* ════════════════════════════════════════
+   UI — Auth 区域
+════════════════════════════════════════ */
+function renderAuthArea(user) {
+  const area = document.getElementById('auth-area');
+  if (user) {
+    area.innerHTML = `
+      <span class="sync-badge" id="sync-badge"></span>
+      ${user.photoURL
+        ? `<img class="user-avatar" src="${escHtml(user.photoURL)}" alt="头像" referrerpolicy="no-referrer">`
+        : ''}
+      <span class="user-name">${escHtml(user.displayName || user.email || '')}</span>
+      <button class="auth-btn" onclick="signOut()" title="退出登录">退出</button>`;
+  } else {
+    area.innerHTML = `
+      <button class="auth-btn signin" onclick="signIn()">
+        <svg class="g-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        Google 登录
+      </button>`;
+  }
+}
+
+function setSyncBadge(state) {
+  const el = document.getElementById('sync-badge');
+  if (!el) return;
+  if (state === 'syncing') {
+    el.className = 'sync-badge syncing';
+    el.textContent = '同步中…';
+  } else if (state === 'synced') {
+    el.className = 'sync-badge synced';
+    el.textContent = '已同步 ✓';
+    setTimeout(() => { if (el) el.textContent = ''; }, 3000);
+  } else if (state === 'error') {
+    el.className = 'sync-badge';
+    el.textContent = '同步失败';
+  }
+}
+
+function showLoginOverlay()  { document.getElementById('login-overlay').classList.remove('hidden'); }
+function hideLoginOverlay()  { document.getElementById('login-overlay').classList.add('hidden'); }
+function showLoadingOverlay(v) {
+  document.getElementById('loading-overlay').classList.toggle('hidden', !v);
 }
 
 /* ════════════════════════════════════════
@@ -705,10 +1006,11 @@ function saveData(data) {
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-let curYear  = today.getFullYear();
-let curMonth = today.getMonth();   // 0-based
+let curYear      = today.getFullYear();
+let curMonth     = today.getMonth();
 let curWeekStart = getWeekStart(today);
-let selectedDate = null;           // Date 对象
+let selectedDate = null;
+let curView      = 'month';
 
 /* ════════════════════════════════════════
    工具函数
@@ -721,22 +1023,36 @@ function fmtMonthKey(y, m) {
   return `${y}-${String(m+1).padStart(2,'0')}`;
 }
 
-// 获取某日期所在周的周一 (Date)
 function getWeekStart(d) {
   const date = new Date(d);
   date.setHours(0, 0, 0, 0);
-  const day = date.getDay();          // 0=Sun
-  const diff = (day === 0) ? -6 : 1 - day; // 调整到周一
+  const day  = date.getDay();
+  const diff = (day === 0) ? -6 : 1 - day;
   date.setDate(date.getDate() + diff);
   return date;
 }
 
-// 返回周的唯一 key "YYYY-Www"
 function fmtWeekKey(weekStart) {
-  const d = new Date(weekStart);
+  const d    = new Date(weekStart);
   const jan1 = new Date(d.getFullYear(), 0, 1);
   const weekNo = Math.ceil((((d - jan1) / 86400000) + jan1.getDay() + 1) / 7);
   return `${d.getFullYear()}-W${String(weekNo).padStart(2,'0')}`;
+}
+
+function getISOWeek(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  const jan4 = new Date(date.getFullYear(), 0, 4);
+  return 1 + Math.round(((date - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 
 const CN_WEEKDAYS = ['一','二','三','四','五','六','日'];
@@ -746,23 +1062,24 @@ const CN_MONTHS   = ['一月','二月','三月','四月','五月','六月',
 /* ════════════════════════════════════════
    视图切换
 ════════════════════════════════════════ */
-let curView = 'month';
-
 function switchView(v) {
   curView = v;
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById(v + '-view').classList.add('active');
   document.getElementById('btn-month').classList.toggle('active', v === 'month');
   document.getElementById('btn-week').classList.toggle('active',  v === 'week');
-  if (v === 'month') renderMonth();
-  else               renderWeek();
+  renderCurrentView();
+}
+
+function renderCurrentView() {
+  if (curView === 'month') renderMonth();
+  else                     renderWeek();
 }
 
 /* ════════════════════════════════════════
-   月视图渲染
+   月视图
 ════════════════════════════════════════ */
 function renderMonth() {
-  // 标题
   document.getElementById('month-title').textContent =
     `${curYear} 年 ${CN_MONTHS[curMonth]}`;
   document.getElementById('todo-title').textContent =
@@ -772,10 +1089,9 @@ function renderMonth() {
   const body = document.getElementById('cal-body');
   body.innerHTML = '';
 
-  // 该月第一天（周一起始，0=Mon…6=Sun 映射）
-  const firstDay = new Date(curYear, curMonth, 1);
-  let startDow = firstDay.getDay(); // 0=Sun
-  startDow = (startDow === 0) ? 6 : startDow - 1; // 转为 Mon=0
+  const firstDay    = new Date(curYear, curMonth, 1);
+  let   startDow    = firstDay.getDay();
+  startDow = (startDow === 0) ? 6 : startDow - 1;
 
   const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
   const totalCells  = Math.ceil((startDow + daysInMonth) / 7) * 7;
@@ -789,7 +1105,6 @@ function renderMonth() {
 
       if (dayNum < 1 || dayNum > daysInMonth) {
         td.classList.add('other-month');
-        // 显示前/后月日期（灰色）
         if (dayNum < 1) {
           const prevLast = new Date(curYear, curMonth, 0).getDate();
           td.innerHTML = `<span class="day-num">${prevLast + dayNum}</span>`;
@@ -800,8 +1115,8 @@ function renderMonth() {
         const d    = new Date(curYear, curMonth, dayNum);
         const key  = fmtDateKey(d);
         const note = data.notes[key] || '';
-        const isToday  = d.getTime() === today.getTime();
-        const isSunday = d.getDay() === 0;
+        const isToday    = d.getTime() === today.getTime();
+        const isSunday   = d.getDay() === 0;
         const isSelected = selectedDate && selectedDate.getTime() === d.getTime();
 
         if (isToday)    td.classList.add('today');
@@ -843,11 +1158,8 @@ function openNotePanel(d) {
   document.getElementById('note-textarea').value = data.notes[key] || '';
   document.getElementById('note-panel').classList.add('open');
 
-  // 刷新选中状态
   document.querySelectorAll('.cal-grid td').forEach(td => td.classList.remove('selected'));
-  // 找到对应 td
-  const tds = document.querySelectorAll('.cal-grid tbody td:not(.other-month)');
-  tds.forEach(td => {
+  document.querySelectorAll('.cal-grid tbody td:not(.other-month)').forEach(td => {
     const numEl = td.querySelector('.day-num');
     if (numEl && parseInt(numEl.textContent) === d.getDate()) {
       td.classList.add('selected');
@@ -874,9 +1186,8 @@ function saveNote() {
     delete data.notes[key];
   }
   saveData(data);
-  // 刷新预览
-  const tds = document.querySelectorAll('.cal-grid tbody td:not(.other-month)');
-  tds.forEach(td => {
+  // 刷新月视图预览
+  document.querySelectorAll('.cal-grid tbody td:not(.other-month)').forEach(td => {
     const numEl = td.querySelector('.day-num');
     if (numEl && parseInt(numEl.textContent) === selectedDate.getDate()) {
       const prev = td.querySelector('.day-note-preview');
@@ -893,8 +1204,8 @@ function addTodo() {
   const text  = input.value.trim();
   if (!text) return;
 
-  const data     = loadData();
-  const mkey     = fmtMonthKey(curYear, curMonth);
+  const data = loadData();
+  const mkey = fmtMonthKey(curYear, curMonth);
   if (!data.todos[mkey]) data.todos[mkey] = [];
   data.todos[mkey].push({ id: Date.now(), text, done: false });
   saveData(data);
@@ -939,25 +1250,23 @@ function renderTodos() {
 }
 
 /* ════════════════════════════════════════
-   周视图渲染
+   周视图
 ════════════════════════════════════════ */
 function renderWeek() {
   const ws = curWeekStart;
   const we = new Date(ws); we.setDate(we.getDate() + 6);
 
-  // 标题
   const fmtD = d => `${d.getMonth()+1}月${d.getDate()}日`;
   document.getElementById('week-title').innerHTML =
-    `${ws.getFullYear()} 年 第 ${getISOWeek(ws)} 周
-     <sub>${fmtD(ws)} — ${fmtD(we)}</sub>`;
+    `${ws.getFullYear()} 年 第 ${getISOWeek(ws)} 周 <sub>${fmtD(ws)} — ${fmtD(we)}</sub>`;
 
-  const data  = loadData();
-  const grid  = document.getElementById('week-days-grid');
+  const data = loadData();
+  const grid = document.getElementById('week-days-grid');
   grid.innerHTML = '';
 
   for (let i = 0; i < 7; i++) {
-    const d   = new Date(ws); d.setDate(ws.getDate() + i);
-    const key = fmtDateKey(d);
+    const d        = new Date(ws); d.setDate(ws.getDate() + i);
+    const key      = fmtDateKey(d);
     const isToday  = d.getTime() === today.getTime();
     const isSunday = d.getDay() === 0;
 
@@ -966,11 +1275,9 @@ function renderWeek() {
                     (isToday  ? ' today'  : '') +
                     (isSunday ? ' sunday' : '');
 
-    const dowName = CN_WEEKDAYS[i];
-
     col.innerHTML = `
       <div class="week-day-header">
-        <span class="week-day-name">周${dowName}</span>
+        <span class="week-day-name">周${CN_WEEKDAYS[i]}</span>
         <span class="week-day-num">${d.getDate()}</span>
       </div>
       <textarea class="week-day-textarea"
@@ -981,9 +1288,8 @@ function renderWeek() {
     grid.appendChild(col);
   }
 
-  // 周通用备注
   const wkey = fmtWeekKey(ws);
-  document.getElementById('week-note-textarea').value = data.weekNotes[wkey] || '';
+  document.getElementById('week-note-textarea').value       = data.weekNotes[wkey] || '';
   document.getElementById('week-note-textarea').dataset.key = wkey;
 }
 
@@ -1000,7 +1306,7 @@ function saveDayNote(textarea) {
 }
 
 function saveWeekNote() {
-  const ta   = document.getElementById('week-note-textarea');
+  const ta  = document.getElementById('week-note-textarea');
   const data = loadData();
   const key  = ta.dataset.key;
   if (!key) return;
@@ -1019,14 +1325,6 @@ function changeWeek(delta) {
   renderWeek();
 }
 
-function getISOWeek(d) {
-  const date = new Date(d);
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-  const jan4 = new Date(date.getFullYear(), 0, 4);
-  return 1 + Math.round(((date - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
-}
-
 /* ════════════════════════════════════════
    通用导航
 ════════════════════════════════════════ */
@@ -1035,20 +1333,11 @@ function goToday() {
   curMonth     = today.getMonth();
   curWeekStart = getWeekStart(today);
   closeNotePanel();
-  if (curView === 'month') renderMonth();
-  else                     renderWeek();
+  renderCurrentView();
 }
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-/* ── 初始化 ── */
-renderMonth();
+/* ── 初始化（Auth 状态监听器会触发渲染） ── */
+renderAuthArea(null); // 先渲染未登录状态
 </script>
 </body>
 </html>
